@@ -1,8 +1,13 @@
 package com.relatosred.RedSocial.servicios;
 
 
+import com.relatosred.RedSocial.entidades.Categoria;
 import com.relatosred.RedSocial.entidades.Texto;
+import com.relatosred.RedSocial.repositorios.CategoriaRepository;
 import com.relatosred.RedSocial.repositorios.TextoRepository;
+import com.relatosred.RedSocial.utilidades.HashUtil;
+import jakarta.persistence.EntityNotFoundException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,15 +19,14 @@ import java.util.Optional;
 public class TextoService {
 
     private TextoRepository textoRepository;
+    private CategoriaRepository categoriaRepository;
+    private HashUtil hashUtil;
 
     // Se usa constructor en lugar de @Autowired.
-    public TextoService(TextoRepository textoRepository) {
+    public TextoService(TextoRepository textoRepository, CategoriaRepository categoriaRepository) {
         this.textoRepository = textoRepository;
-    }
-
-    // Verificar contenido duplicado.
-    public boolean existeTextoPorContenido(String contenido){
-        return textoRepository.existsByContenido(contenido);
+        this.categoriaRepository = categoriaRepository;
+        this.hashUtil = new HashUtil();
     }
 
     // Verificar existencia de texto por id.
@@ -31,26 +35,44 @@ public class TextoService {
     }
 
     // Obtener texto por id.
-    public Texto obtenerTexto(Long idTexto) {
+    public Texto obtenerTextoPorId(Long idTexto) {
         Optional<Texto> textoOpt = textoRepository.findById(idTexto);
 
         if (!textoOpt.isPresent()) {
-            throw new RuntimeException("Texto no encontrado.");
+            throw new EntityNotFoundException("Texto no encontrado.");
         }
         return textoOpt.get();
     }
 
+    public String normalizarTexto(String texto) {
+        if (texto == null) {
+            return null;
+        }
+        // Convertir a minúsculas.
+        String normalizado = texto.toLowerCase();
+
+        // Elimina espacios en blanco y caracteres de puntuación.
+        normalizado = normalizado.replaceAll("[\\s,.;\\-_–—()\\[\\]{}]+", "");
+
+        return normalizado;
+    }
+
     @Transactional // Crea nuevo objeto Texto.
     public Texto crearTexto(Texto texto) {
-        Texto textoGuardado = null;
+        Texto textoGuardado;
 
-        if (!existeTextoPorContenido(texto.getContenido())) {
+        // Calculamos hash a partir del contenido normalizado.
+        String textoNormalizado = normalizarTexto(texto.getContenido());
+        String hashSHA256 = hashUtil.calcularSHA256(textoNormalizado);
+
+        if (!textoRepository.existsByHashSHA256(hashSHA256)) {
+            // Añadimos hash calculado.
+            texto.setHashSHA256(hashSHA256);
             textoGuardado = textoRepository.save(texto);
         } else {
-            // RuntimeExcepction interrumpe la ejecución.
-            throw new RuntimeException("Ya existe un texto con ese contenido.");
+            // Excepción específica para duplicado.
+            throw new DataIntegrityViolationException("Ya existe un texto con ese contenido.");
         }
-
         return textoGuardado;
     }
 
@@ -64,10 +86,6 @@ public class TextoService {
         // Eliminanos duplicados de la lista.
         listaResultados = listaResultados.stream().distinct().toList();
 
-        if (listaResultados.isEmpty()) { // Controlamos que no haya coincidencias.
-            throw new RuntimeException("No se encontraron coincidencias.");
-        }
-
         return listaResultados;
     }
 
@@ -78,10 +96,7 @@ public class TextoService {
             criterio = "notaMedia";
         }
         List<Texto> listaResultados = new ArrayList<>();
-        listaResultados.addAll(textoRepository.filtrarTextosPorCriterio(criterio));
-
-        // Controlamos que la lista no esté vacía.
-        if (listaResultados.isEmpty()) throw new RuntimeException("No hay textos para mostrar.");
+        listaResultados.addAll(textoRepository.filtrarPorCriterio(criterio));
 
         return listaResultados.stream().distinct().toList();
     }
@@ -90,30 +105,49 @@ public class TextoService {
     public List<Texto> filtrarPorCategoria(String categoria) {
         // Valor por defecto si no se especifica.
         if (categoria == null || categoria.isBlank()) {
-            throw new RuntimeException("La categoría seleccionada no es válida.");
+            throw new IllegalArgumentException("La categoría no puede estar vacía.");
         }
-        List<Texto> listaResultados = new ArrayList<>();
-        listaResultados.addAll(textoRepository.buscarPorCategoria(categoria));
 
-        // Controlamos que la lista no esté vacía.
-        if (listaResultados.isEmpty()) throw new RuntimeException("No hay textos para mostrar.");
+        // Validación de subcategoría.
+        Categoria.CategoriaEnum categoriaEnum;
+        try {
+            categoriaEnum = Categoria.CategoriaEnum.valueOf(categoria.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new EntityNotFoundException("Categoría '" + categoria + "' no válida.");
+        }
+
+        List<Texto> listaResultados = new ArrayList<>();
+        listaResultados.addAll(textoRepository.buscarPorCategoria(categoriaEnum));
 
         return listaResultados.stream().distinct().toList();
     }
 
-    // Filtra textos por categoría.
-    public List<Texto> filtrarPorCategoriaYSubcategoria(String categoria, String subcategoria) {
+    // Filtra textos por categoría y subcategoría.
+    public List<Texto> filtrarPorCategoriaYSubcategoria(String categoriaStr, String subcategoriaStr) {
         // Valor por defecto si no se especifica.
-        if (categoria == null || categoria.isBlank()) {
-            throw new RuntimeException("La categoría seleccionada no es válida.");
-        } else if (subcategoria == null || subcategoria.isBlank()) {
-            throw new RuntimeException("La subcategoría seleccionada no es válida.");
+        if (categoriaStr == null || categoriaStr.isBlank() ||
+                subcategoriaStr == null || subcategoriaStr.isBlank()) {
+            throw new IllegalArgumentException("Se requiere categoría y subcategoría.");
         }
+
+        // Validación de categoría.
+        Categoria.CategoriaEnum categoria;
+        try {
+            categoria = Categoria.CategoriaEnum.valueOf(categoriaStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new EntityNotFoundException("Categoría '" + categoriaStr + "' no válida.");
+        }
+
+        // Validación de subcategoría.
+        Categoria.SubcategoriaEnum subcategoria;
+        try {
+            subcategoria = Categoria.SubcategoriaEnum.valueOf(subcategoriaStr.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new EntityNotFoundException("Subcategoría '" + subcategoriaStr + "' no válida.");
+        }
+
         List<Texto> listaResultados = new ArrayList<>();
         listaResultados.addAll(textoRepository.buscarPorCategoriaYSubcategoria(categoria, subcategoria));
-
-        // Controlamos que la lista no esté vacía.
-        if (listaResultados.isEmpty()) throw new RuntimeException("No hay textos para mostrar.");
 
         return listaResultados.stream().distinct().toList();
     }
@@ -123,10 +157,23 @@ public class TextoService {
         Texto textoActualizado = null;
 
         if (existeTextoPorId(texto.getIdTexto())) {
-            textoActualizado = textoRepository.save(texto);
+            
+                // Obtenemos nuevo hash SHA-256 para el contenido.
+                String textoNormalizado = normalizarTexto(texto.getContenido());
+                String nuevoHash = hashUtil.calcularSHA256(textoNormalizado);
+                // Obtenemos texto original existente.
+                Optional<Texto> txtOptional = textoRepository.findById(texto.getIdTexto());
+                Texto textoExistente = txtOptional.get();
+
+                // Si se ha actualizado el contenido, recalculamos el hash.
+                if (textoExistente.getHashSHA256() == null ||
+                        !textoExistente.getHashSHA256().equals(nuevoHash)) {
+                    texto.setHashSHA256(nuevoHash);
+                }
+                textoActualizado = textoRepository.save(texto);
         } else {
             // RuntimeExcepction interrumpe la ejecución.
-            throw new RuntimeException("Texto no encontrado.");
+            throw new EntityNotFoundException("Texto no encontrado.");
         }
 
         return textoActualizado;
@@ -134,9 +181,9 @@ public class TextoService {
 
     @Transactional // Borrado blando.
     public Texto eliminarTexto(Long idTexto) {
-        Texto texto = obtenerTexto(idTexto);
+        Texto texto = obtenerTextoPorId(idTexto);
         if (texto.getEliminado()) {
-            throw new RuntimeException("El texto ya está eliminado.");
+            throw new IllegalArgumentException("El texto ya está eliminado.");
         }
 
         texto.setEliminado(true);

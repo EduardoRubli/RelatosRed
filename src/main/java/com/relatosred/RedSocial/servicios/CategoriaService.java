@@ -4,6 +4,7 @@ import com.relatosred.RedSocial.entidades.Categoria;
 import com.relatosred.RedSocial.repositorios.CategoriaRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
+import java.util.Optional;
 
 @Service
 public class CategoriaService {
@@ -16,10 +17,19 @@ public class CategoriaService {
     }
 
     @Transactional
-    public Categoria crearCategoria(Categoria categoria){
+    public Categoria obtenerOCrearCategoria(Categoria.CategoriaEnum categoriaEnum,
+                                            Categoria.SubcategoriaEnum subcategoriaEnum) {
+        // Busca la categoría existente.
+        Optional<Categoria> categoriaExistente =
+                categoriaRepository.findByCategoriaAndSubcategoria(categoriaEnum, subcategoriaEnum);
 
-
-
-        return categoria;
+        if (categoriaExistente.isPresent()) {
+            // Devuelve categoría existente.
+            return categoriaExistente.get();
+        } else {
+            // Crea y persiste una nueva categoría.
+            Categoria nuevaCategoria = new Categoria(categoriaEnum, subcategoriaEnum);
+            return categoriaRepository.save(nuevaCategoria);
+        }
     }
 }

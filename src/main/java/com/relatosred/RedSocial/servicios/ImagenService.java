@@ -16,15 +16,18 @@ import java.util.Optional;
 public class ImagenService {
 
     private ImagenRepository imagenRepository;
+    private HashUtil hashUtil;
 
     // Se usa constructor en lugar de @Autowired.
     public ImagenService(ImagenRepository imagenRepository) {
+
         this.imagenRepository = imagenRepository;
+        this.hashUtil = new HashUtil();
     }
 
     public Imagen guardarImagen(File archivo, String ruta, String descripcion, String tipo, Usuario usuario)
             throws NoSuchAlgorithmException, IOException {
-        String hashMD5 = HashUtil.calcularMD5(archivo);
+        String hashMD5 = hashUtil.calcularMD5(archivo);
 
         // Verificar si ya existe una imagen con el mismo hash
         Optional<Imagen> imagenExistente = imagenRepository.findByHashMD5(hashMD5);

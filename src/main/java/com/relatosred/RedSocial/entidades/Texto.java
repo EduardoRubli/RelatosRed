@@ -23,6 +23,8 @@ public class Texto {
     @Lob // En MySQL se mapea a TEXT.
     private String contenido;
 
+    private String hashSHA256;
+
     private LocalDateTime fechaPublicacion;
 
     @Enumerated(EnumType.STRING)
@@ -37,21 +39,18 @@ public class Texto {
     private String idioma;
     private String sinopsis;
     private Double notaMedia;
-    @Transient // No se persiste.
-    private Double notaUsuario;
     // Borrado blando de texto.
     private Boolean eliminado = false;
 
-    @ManyToOne
-    @JoinColumn(name = "idCategoria")
+    @ManyToOne // Categorías.
+    @JoinColumn(name = "idCategoria", nullable = false)
     private Categoria categoria;
 
-    // Imagen de portada.
-    @ManyToOne
+    @ManyToOne // Imagen de portada.
     @JoinColumn(name = "idImagen")
     private Imagen portada;
 
-    @JsonIgnore // Relación entre texto y nota asignada.
+    @JsonIgnore // Relación entre texto y notas asignadas.
     @OneToMany(mappedBy = "texto", cascade = CascadeType.ALL)
     private Set<NotaTexto> notasTexto = new HashSet<>();
 
@@ -59,7 +58,7 @@ public class Texto {
     @OneToMany(mappedBy = "texto", cascade = CascadeType.ALL)
     private Set<Mensaje> mensajes = new HashSet<>();
 
-    @JsonIgnore // Un texto puede tener muchas imágenes insertadas.
+    @JsonIgnore // Un texto puede tener imágenes insertadas.
     @OneToMany(mappedBy = "texto", cascade = CascadeType.ALL)
     private Set<Imagen> imagenesInsertadas = new HashSet<>();
 
@@ -107,6 +106,13 @@ public class Texto {
 
     public void setContenido(String contenido) {
         this.contenido = contenido;
+    }
+
+    public String getHashSHA256() {
+        return hashSHA256;
+    }
+    public void setHashSHA256(String hashSHA256) {
+        this.hashSHA256 = hashSHA256;
     }
 
     public LocalDateTime getFechaPublicacion() {
@@ -164,23 +170,18 @@ public class Texto {
         this.sinopsis = sinopsis;
     }
 
-    public Double getNotaMedia() {
-        double suma = 0.00;
-        if (notaMedia == null && !notasTexto.isEmpty()) {
-            // Opcional: lógica para calcular el promedio dinámicamente si notaMedia es nulo
-            for (NotaTexto nota : notasTexto) {
-                suma += nota.getNota();
-            }
-            notaMedia = suma / notasTexto.size();
-        }
-        return notaMedia;
-    }
+    public Double getNotaMedia() { return notaMedia; }
 
     public void setNotaMedia(Double notaMedia) {
         this.notaMedia = notaMedia;
     }
-    
-    public void setNotaUsuario(Double notaUsuario) {
-        this.notaUsuario = notaUsuario;
+
+    public Set<NotaTexto> getNotasTexto() {
+        return notasTexto;
     }
+
+    public void setNotasTexto(Set<NotaTexto> notasTexto) {
+        this.notasTexto = notasTexto;
+    }
+
 }

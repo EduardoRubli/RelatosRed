@@ -2,7 +2,9 @@ package com.relatosred.RedSocial.servicios;
 
 import com.relatosred.RedSocial.entidades.Usuario;
 import com.relatosred.RedSocial.repositorios.UsuarioRepository;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -20,8 +22,8 @@ public class UsuarioService {
         this.usuarioRepository = usuarioRepository;
     }
 
-    // Verificar existencia de usuario.
-    public boolean existeUsuario(String email){
+    // Verifica la existencia de usuario.
+    public boolean existeUsuarioPorEmail(String email){
         return usuarioRepository.existsByEmailIgnoreCase(email);
     }
 
@@ -30,7 +32,7 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findByEmailIgnoreCase(email);
 
         if (usuario == null) {
-            throw new RuntimeException("Usuario no encontrado.");
+            throw new EntityNotFoundException("Usuario no encontrado.");
         }
         return usuario;
     }
@@ -39,17 +41,16 @@ public class UsuarioService {
     public Usuario obtenerUsuarioPorId(Long idUsuario) {
         Optional<Usuario> usuario = usuarioRepository.findById(idUsuario);
         if (!usuario.isPresent()) {
-            throw new RuntimeException("Usuario no encontrado.");
+            throw new EntityNotFoundException("Usuario no encontrado.");
         }
         return usuario.get();
     }
 
     @Transactional // Crear nuevo usuario tras verificar email.
     public Usuario crearUsuario(Usuario usuario) {
-        if (existeUsuario(usuario.getEmail())) {
-            throw new RuntimeException("Ya existe un usuario con ese email.");
+        if (existeUsuarioPorEmail(usuario.getEmail())) {
+            throw new DataIntegrityViolationException("Ya existe un usuario con ese email.");
         }
-
         usuario.setFechaReg(LocalDateTime.now());
         return usuarioRepository.save(usuario);
     }
@@ -71,13 +72,12 @@ public class UsuarioService {
     public Usuario actualizarUsuario(Usuario usuario) {
         Usuario usuarioActualizado = null;
 
-        if (existeUsuario(usuario.getEmail())) {
+        if (existeUsuarioPorEmail(usuario.getEmail())) {
             usuarioActualizado = usuarioRepository.save(usuario);
         } else {
             // RuntimeExcepction interrumpe la ejecución.
-            throw new RuntimeException("Usuario no encontrado.");
+            throw new EntityNotFoundException("Usuario no encontrado.");
         }
-
         return usuarioActualizado;
     }
 
@@ -86,7 +86,7 @@ public class UsuarioService {
         Usuario usuario = obtenerUsuarioPorId(idUsuario);
 
         if (usuario.getEliminado()) {
-            throw new RuntimeException("El usuario ya esta eliminado.");
+            throw new IllegalArgumentException("El usuario ya está eliminado.");
         }
 
         // Realizamos borrado blando.

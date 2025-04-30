@@ -22,7 +22,7 @@ public class UsuarioController {
 
     private UsuarioService usuarioService;
 
-    // Se usa constructor en lugar de @Autowired.
+    // Usamos constructor en lugar de @Autowired para inyectar.
     public UsuarioController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
@@ -37,7 +37,7 @@ public class UsuarioController {
 
     //Endpoint para crear un nuevo usuario.
     @PostMapping("/usuario/crear")
-    public ResponseEntity<?> crearUsuario(@RequestParam(value = "nombre", required = true)
+    public ResponseEntity<Usuario> crearUsuario(@RequestParam(value = "nombre", required = true)
                                               @NotBlank(message = "El campo nombre es obligatorio.") String nombre,
                                           @RequestParam(value = "apellido", required = true)
                                               @NotBlank(message = "El campo apellido es obligatorio.") String apellido,
@@ -52,36 +52,32 @@ public class UsuarioController {
                                           @RequestParam(value = "fechaNac", required = true)
                                               @Pattern(regexp = "^\\d{4}-\\d{2}-\\d{2}$", message = "Se requiere formato yyyy-MM-dd.") String fechaNacStr) {
 
+        LocalDate fechaNac;
         try {
             //DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
-            LocalDate fechaNac = LocalDate.parse(fechaNacStr);
+            fechaNac = LocalDate.parse(fechaNacStr);
+        } catch (DateTimeParseException e) {
+            throw new IllegalArgumentException("Formato de fecha incorrecto (yyyy-MM-dd).");
+        }
+
             Usuario usuario = new Usuario(nombre, apellido, alias, email, password, fechaNac);
 
             // Creamos nuevo usuario desde usuarioService.
             Usuario usuarioCreado = usuarioService.crearUsuario(usuario);
-            return ResponseEntity.ok(usuarioCreado);
-        } catch (DateTimeParseException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Formato de fecha incorrecto.");
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
+            return ResponseEntity.status(HttpStatus.CREATED).body(usuarioCreado);
     }
 
     // Endpoint para buscar usuarios por nombre.
     @GetMapping("/admin/usuarios/buscar")
-    public ResponseEntity<?> buscarUsuarios(@RequestParam String subcadena) {
+    public ResponseEntity<List<Usuario>> buscarUsuarios(@RequestParam String subcadena) {
         List<Usuario> usuarios = usuarioService.buscarUsuarios(subcadena);
-
-        if (!usuarios.isEmpty()) {
-            return ResponseEntity.ok(usuarios);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No se han encontrado usuarios.");
-        }
+        // Devolvemos lista de usuarios aunque esté vacía.
+        return ResponseEntity.ok(usuarios);
     }
 
     // Endpoint para actualizar un usuario existente.
     @PutMapping("/usuario/actualizar")
-    public ResponseEntity<?> actualizarUsuario(@RequestParam("email")
+    public ResponseEntity<Usuario> actualizarUsuario(@RequestParam("email")
                                                    @NotBlank(message = "El campo email es obligatorio.")
                                                    @Email(message = "El formato de email debe ser válido.") String email,
                                                @RequestParam(value = "alias", required = false) String alias,
@@ -90,13 +86,10 @@ public class UsuarioController {
                                                @RequestParam(value = "sexo", required = false) String sexo,
                                                @RequestParam(value = "ciudad", required = false) String ciudad,
                                                @RequestParam(value = "avatarURL", required = false) String avatarURL) {
-        try {
-            Usuario usuario = null;
             // Recuperamos el usuario existente.
             // Se usa el email como identificador para usuario.
-            usuario = usuarioService.obtenerUsuarioPorEmail(email);
+            Usuario usuario = usuarioService.obtenerUsuarioPorEmail(email);
 
-            if (usuario != null) {
                 // Actualizamos los campos si se han pasado valores.
                 if (validarCampo(alias)) {
                     usuario.setAlias(alias);
@@ -110,7 +103,7 @@ public class UsuarioController {
                         LocalDate fechaNac = LocalDate.parse(fechaNacStr);
                         usuario.setFechaNac(fechaNac);
                     } catch (DateTimeException e) {
-                        return ResponseEntity.badRequest().body("Formato de fecha incorrecto.");
+                        throw new IllegalArgumentException("Formato de fecha incorrecto (yyyy-MM-dd).");
                     }
                 }
                 if (validarCampo(sexo)) {
@@ -123,31 +116,15 @@ public class UsuarioController {
                     usuario.setAvatarURL(avatarURL);
                 }
 
-                // Delegamos la actualización al servicio.
+                // Delegamos la actualización a UsuarioService.
                 Usuario usuarioActualizado = usuarioService.actualizarUsuario(usuario);
                 return ResponseEntity.ok(usuarioActualizado);
-            } else {
-              return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Usuario no encontrado.");
-            }
-        } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        }
     }
 
     @PutMapping("/usuario/{idUsuario}")
-    public ResponseEntity<?> eliminarUsuario(@PathVariable Long idUsuario) {
-        try {
+    public ResponseEntity<String> eliminarUsuario(@PathVariable Long idUsuario) {
             // Cambia el estado de eliminado a true.
             usuarioService.eliminarUsuario(idUsuario);
             return ResponseEntity.ok().body("Usuario eliminado con éxito.");
-        } catch (RuntimeException e) {
-            if (e.getMessage().equals("Usuario no encontrado.")) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
-            } else if (e.getMessage().equals("El usuario ya esta eliminado.")) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-            }
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error inesperado: \n"
-                    + e.getMessage());
-        }
     }
 }

@@ -1,5 +1,6 @@
 package com.relatosred.RedSocial.repositorios;
 
+import com.relatosred.RedSocial.entidades.Categoria;
 import com.relatosred.RedSocial.entidades.Texto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -10,8 +11,10 @@ import java.util.List;
 public interface TextoRepository extends JpaRepository<Texto, Long> {
     // Verificar si existe texto por id.
     boolean existsById(Long idTexto);
-    // Verificar si existe un texto por contenido.
-    boolean existsByContenido(String contenido);
+    // Verificar si existe texto por contenido.
+    boolean existsByContenido(String contenidoTexto);
+    // Verificar si existe un texto por hash.
+    boolean existsByHashSHA256(String hashSHA256);
     // Eliminar texto por id.
     void deleteById(Long idTexto);
     
@@ -22,7 +25,7 @@ public interface TextoRepository extends JpaRepository<Texto, Long> {
             "t.eliminado = false " +
             "ORDER BY t.notaMedia DESC")
     List<Texto> buscarPorCategoria(
-            @Param("categoria") String categoria
+            @Param("categoria") Categoria.CategoriaEnum categoria
     );
 
     // Búsqueda por categoría y subcategoría.
@@ -33,8 +36,8 @@ public interface TextoRepository extends JpaRepository<Texto, Long> {
             "t.eliminado = false " +
             "ORDER BY t.notaMedia DESC")
     List<Texto> buscarPorCategoriaYSubcategoria(
-            @Param("categoria") String categoria,
-            @Param("subcategoria") String subcategoria
+            @Param("categoria") Categoria.CategoriaEnum categoria,
+            @Param("subcategoria") Categoria.SubcategoriaEnum subcategoria
     );
 
     // Búsqueda por título parcial.
@@ -67,5 +70,5 @@ public interface TextoRepository extends JpaRepository<Texto, Long> {
             "   WHEN :criterio = 'fechaPublicacion' THEN t.fechaPublicacion " +
             "   ELSE t.notaMedia " + // Valor por defecto
             "END DESC")
-    List<Texto> filtrarTextosPorCriterio(@Param("criterio") String criterio);
+    List<Texto> filtrarPorCriterio(@Param("criterio") String criterio);
 }

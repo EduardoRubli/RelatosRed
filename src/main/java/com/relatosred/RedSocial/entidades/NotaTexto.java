@@ -7,10 +7,9 @@ import jakarta.persistence.*;
         @UniqueConstraint(columnNames = {"idUsuario", "idTexto"})
 })
 public class NotaTexto {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long idTextoNota;
+    private Long idNotaTexto;
 
     @ManyToOne
     @JoinColumn(name = "idUsuario", nullable = false)
@@ -20,24 +19,24 @@ public class NotaTexto {
     @JoinColumn(name = "idTexto", nullable = false)
     private Texto texto;
 
-    private double nota;
+    private Double nota;
 
     // Constructor vacío
     public NotaTexto() {}
 
-    public NotaTexto(Usuario usuario, Texto texto, double nota) {
+    public NotaTexto(Usuario usuario, Texto texto, Double nota) {
         this.usuario = usuario;
         this.texto = texto;
         this.nota = nota;
     }
 
     // Getters y Setters.
-    public Long getIdTextoNota() {
-        return idTextoNota;
+    public Long getIdNotaTexto() {
+        return idNotaTexto;
     }
 
-    public void setIdTextoNota(Long idTextoNota) {
-        this.idTextoNota = idTextoNota;
+    public void setIdNotaTexto(Long idNotaTexto) {
+        this.idNotaTexto = idNotaTexto;
     }
 
     public Usuario getUsuario() {

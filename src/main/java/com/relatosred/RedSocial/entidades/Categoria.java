@@ -1,36 +1,63 @@
 package com.relatosred.RedSocial.entidades;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
-@Table(name = "Categoria")
+@Table(name = "Categoria",
+        uniqueConstraints = { @UniqueConstraint(columnNames = {"categoria", "subcategoria"}) },
+        indexes = { @Index(columnList = "categoria, subcategoria", unique = true) })
 public class Categoria {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idCategoria;
 
-    private String categoria; // Nombre de la categoría principal.
-    private String subcategoria; // Nombre de la subcategoría.
+    @Enumerated(EnumType.STRING)
+    @Column(length = 16, nullable = false)
+    private CategoriaEnum categoria;
 
-    @JsonIgnore
-    @OneToMany(mappedBy = "categoria", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<Texto> textos = new HashSet<>();
+    public enum CategoriaEnum {
+        MISTERIO,
+        THRILLER,
+        DRAMA,
+        FANTASIA,
+        CIENCIAFIC,
+        HISTORICO,
+        AVENTURA,
+        FANFIC,
+        EROTICO,
+        BIOGRAFIA;
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 16)
+    private SubcategoriaEnum subcategoria;
+
+    public enum SubcategoriaEnum {
+        CRIMEN,
+        POLICIACO,
+        ROMANCE,
+        PSICOLOGICO,
+        CONSPIRACION,
+        FUTURISTA,
+        TERROR,
+        PARANORMAL,
+        JUVENIL,
+        UTOPIA,
+        DISTOPIA,
+        BELICO;
+    }
 
     // Constructor vacío.
     public Categoria() {}
 
     // Constructor para categoría.
-    public Categoria(String categoria) {
+    public Categoria(CategoriaEnum categoria) {
         this.categoria = categoria;
         this.subcategoria = null;
     }
 
     // Constructor para categoría y subcategoría.
-    public Categoria(String categoria, String subcategoria) {
+    public Categoria(CategoriaEnum categoria, SubcategoriaEnum subcategoria) {
         this.categoria = categoria;
         this.subcategoria = subcategoria;
     }
@@ -44,19 +71,19 @@ public class Categoria {
         this.idCategoria = idCategoria;
     }
 
-    public String getCategoria() {
+    public CategoriaEnum getCategoria() {
         return categoria;
     }
 
-    public void setCategoria(String categoria) {
+    public void setCategoria(CategoriaEnum categoria) {
         this.categoria = categoria;
     }
 
-    public String getSubcategoria() {
+    public SubcategoriaEnum getSubcategoria() {
         return subcategoria;
     }
 
-    public void setSubcategoria(String subcategoria) {
+    public void setSubcategoria(SubcategoriaEnum subcategoria) {
         this.subcategoria = subcategoria;
     }
 }
