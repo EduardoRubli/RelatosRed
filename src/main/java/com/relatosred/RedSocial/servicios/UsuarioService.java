@@ -5,6 +5,7 @@ import com.relatosred.RedSocial.repositorios.UsuarioRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.transaction.Transactional;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,10 +17,13 @@ import java.util.Optional;
 public class UsuarioService {
 
     private UsuarioRepository usuarioRepository;
+    private PasswordEncoder passwordEncoder;
 
     // Se usa constructor en lugar de @Autowired.
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository,
+                          PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     // Verifica la existencia de usuario.
@@ -29,11 +33,8 @@ public class UsuarioService {
 
     // Obtener usuario por email.
     public Usuario obtenerUsuarioPorEmail(String email) {
-        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(email);
-
-        if (usuario == null) {
-            throw new EntityNotFoundException("Usuario no encontrado.");
-        }
+        Usuario usuario = usuarioRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado."));
         return usuario;
     }
 
@@ -52,6 +53,8 @@ public class UsuarioService {
             throw new DataIntegrityViolationException("Ya existe un usuario con ese email.");
         }
         usuario.setFechaReg(LocalDateTime.now());
+        // No se debe persistir con la contraseña sin cifrar.
+        usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
         return usuarioRepository.save(usuario);
     }
 

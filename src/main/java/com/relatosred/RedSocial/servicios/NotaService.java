@@ -5,13 +5,14 @@ import com.relatosred.RedSocial.entidades.Texto;
 import com.relatosred.RedSocial.repositorios.NotaRepository;
 import com.relatosred.RedSocial.repositorios.TextoRepository;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Set;
 import java.util.Optional;
 
+@Service
 public class NotaService {
-
     private NotaRepository notaRepository;
     private TextoRepository textoRepository;
 
@@ -23,7 +24,7 @@ public class NotaService {
 
     @Transactional
     public NotaTexto puntuarTexto(NotaTexto notaTexto) {
-        NotaTexto notaGuardada = null;
+        // Verificamos si el usuario ya puntuó el texto.
         Optional<NotaTexto> notaExistente = notaRepository.findByTextoAndUsuario(
                 notaTexto.getTexto(), notaTexto.getUsuario());
 
@@ -31,26 +32,31 @@ public class NotaService {
         // Si el texto es null devolvemos excepción.
         if (texto == null) throw new EntityNotFoundException("Texto no encontrado.");
 
-        Double notaMedia = calcularNotaMedia(texto.getNotasTexto());
-        // Actualizamos notaMedia.
-        texto.setNotaMedia(notaMedia);
-        // Guardamos texto con la nueva media.
-        textoRepository.save(texto);
-
+        NotaTexto notaGuardada;
         if (notaExistente.isPresent()) {
+            // Si el usuario ya votó el texto.
             notaGuardada = notaExistente.get();
             // Actualizamos la nota del registro existente.
             notaGuardada.setNota(notaTexto.getNota());
-            // Actualizamos el registro completo.
+            // JPA actualiza la colección automáticamente.
             notaGuardada = notaRepository.save(notaGuardada);
         } else {
+            // No existe nota previa para ese texto y usuario.
             notaGuardada = notaRepository.save(notaTexto);
+            texto.getNotasTexto().add(notaGuardada);
         }
+
+        // Recalculamos la media.
+        Double notaMedia = calcularNotaMedia(texto.getNotasTexto());
+        texto.setNotaMedia(notaMedia);
+
+        // Guardamos el texto actualizado.
+        textoRepository.save(texto);
 
         return notaGuardada;
     }
 
-    public Double calcularNotaMedia(Set<NotaTexto> notasTexto){
+    public Double calcularNotaMedia(Set<NotaTexto> notasTexto) {
         Double notaMedia = 0.0;
 
         if (notasTexto.size() > 0) {
@@ -72,7 +78,7 @@ public class NotaService {
     // Redondeo a dos decimales usando Math.round().
     private Double redondeoADosDecimales(Double nota){
         // Math.round redondea al entero más próximo.
-        nota = (double) (Math.round(nota * 100)/100);
+        nota = (double) (Math.round(nota * 100.0)/100.0);
         return nota;
     }
 }

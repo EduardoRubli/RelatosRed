@@ -1,0 +1,1908 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <title>Relatosfera</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #f7f7fa;
+    }
+    .header-container {
+      width: 100%;
+      background: #31426a;
+      color: #fff;
+      padding: 0.5em 0;
+    }
+    .header-inner {
+      max-width: 950px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 60px;
+      box-sizing: border-box;
+      padding: 0 2em;
+    }
+    .header-titulo {
+      font-size: 2.5em;
+      font-weight: 700;
+      letter-spacing: 1px;
+      margin: 0;
+      text-align: left;
+    }
+    .header-login {
+    /* --- Login y registro --- */
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      margin-top: 4px;
+      gap: 3px;
+    }
+    /* --- Inicio form-login --- */
+    .form-login-linea {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .form-login-linea input {
+      border: 1px solid #b6c9e8;
+      border-radius: 4px;
+      padding: 4px;
+      font-size: 0.9em;
+      background: #f6f8fc;
+      color: #222;
+      min-width: 100px;
+      max-width: 120px;
+      width: 120px;
+    }
+    .form-login-linea input:focus {
+      outline: 2px solid #80b1ef;
+    }
+    .form-login-linea input[type="password"] {
+      max-width: 60px;
+      width: 60px;
+    }
+    .form-login-linea input[type="email"] {
+      max-width: 150px;
+      width: 150px;
+    }
+    .form-login-linea button {
+      background: #a7c6e7; /* Azul claro */
+      border: none;
+      color: #31426a;
+      font-weight: bold;
+      border-radius: 4px;
+      padding: 5px 8px;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: background 0.18s, color 0.18s;
+    }
+    .form-login-linea button:hover {
+      background: #b9d6f5;
+      color: #13213e;
+    }
+    .login-links {
+      display: flex;
+      justify-content: flex-end;
+      /* Separación entre links */
+      gap: 2px;
+    }
+    /* Estilo enlaces */
+    .login-links a {
+      color: #fff;
+      font-size: 0.9em;
+      text-decoration: none !important;
+      padding: 2px 6px;
+      border-radius: 3px;
+      transition: color 0.15s, background 0.15s;
+      cursor: pointer;
+      line-height: 1.5;
+    }
+    .login-links a:hover {
+      color: #b6c9e8;
+      background: #233050;
+    }
+    @media (max-width: 700px) {
+      .header-login { align-items: stretch; }
+      .form-login-linea { flex-direction: column; align-items: stretch; }
+      .login-links { flex-direction: column; gap: 2px; align-items: flex-end; }
+      .login-links a { text-align: right; width: auto;}
+    }
+    /* --- Fin form-login --- */
+    @media(max-width: 990px){
+      .header-inner { max-width: 96vw; }
+    }
+    @media (max-width: 700px) {
+      .header-inner { flex-direction: column; gap: 10px; align-items: flex-start; }
+      .header-titulo { font-size: 1.3em; width: 100%; }
+      .header-login { width: 100%; justify-content: flex-end; }
+    }
+    /* --- Sistema de puntuación --- */
+    .puntuacion-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .puntuacion-form {
+      display: flex;
+      align-items: center;
+      animation: apareceForm 0.3s ease;
+    }
+    @keyframes apareceForm {
+      from { opacity: 0; transform: translateX(-10px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+    .puntuacion-input-group {
+      display: flex;
+      align-items: center;
+      background: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 2px 8px rgba(49, 66, 106, 0.1);
+      padding: 5px 10px;
+      border: 1px solid #e0e0e0;
+    }
+    .puntuacion-input {
+      width: 60px;
+      border: none;
+      background: none;
+      padding: 5px;
+      font-size: 0.85em;
+      text-align: center;
+      font-weight: bold;
+      color: #31426a;
+    }
+    .puntuacion-input:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(49, 66, 106, 0.2);
+    }
+    .puntuacion-btn {
+      background: #31426a;
+      border: none;
+      color: white;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      margin-left: 5px;
+      font-size: 0.7em;
+    }
+    .puntuacion-btn:hover {
+      background: #223156;
+      transform: scale(1.05);
+    }
+    .detalle-relato-nota-container {
+      margin-left: auto; /* Empuja la nota a la derecha */
+    }
+    .detalle-relato-nota {
+      display: inline-block;
+      min-width: 48px;
+      text-align: center;
+      background: #31426a;
+      color: #fff;
+      font-weight: bold;
+      font-size: 1.17em;
+      border-radius: 9px;
+      padding: 0.45em 1em;
+      box-shadow: 0 2px 8px rgba(180, 189, 198, 0.27);
+      letter-spacing: 0.02em;
+    }
+    /* Ocultar flechas en input number */
+    .puntuacion-input::-webkit-inner-spin-button,
+    .puntuacion-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    .puntuacion-input {
+      -moz-appearance: textfield;
+    }
+    @media (max-width: 600px) {
+      .puntuacion-input {
+        width: 50px;
+        font-size: 0.8em;
+      }
+      .puntuacion-btn {
+        width: 22px;
+        height: 22px;
+      }
+    }
+    /* --- Bloque de filtros --- */
+    #filtrosContainer {
+      width: 100%;
+      background: #dde3f2;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      gap: 24px;
+      padding: 0.5em 0;
+    }
+    .bloque-filtro {
+      background: #fff;
+      padding: 1em 1.5em;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      min-width: 300px;
+      height: 14px;
+    }
+    .bloque-filtro input,
+    .bloque-filtro select {
+      padding: 4px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+    }
+    .bloque-filtro label {
+      font-weight: bold;
+    }
+    .bloque-filtro button {
+      background: #31426a; color: #fff;
+      font-weight: bold; border: none;
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 7px 15px;
+      transition: background 0.2s;
+    }
+    .bloque-filtro button:hover { background: #222e46; }
+    /* --- RESULTADOS --- */
+    .ventana-error {
+      max-width: 450px;
+      margin: 3.5rem auto 2rem auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 30px #dde3f3, 0 2px 6px #b4bdc6;
+      background: #dde3f3;
+      border: 2.5px solid #c4c4c4;
+      overflow: hidden;
+    }
+    .titulo-error {
+      background: #c4c4c4;
+      color: #262135;
+      font-weight: bold;
+      font-size: 1.2em;
+      letter-spacing: 0.04em;
+      padding: 0.8em 1.5em 0.5em 1.5em;
+      border-radius: 8px 8px 0 0 ;
+      text-align: left;
+    }
+    .error-mensaje {
+      padding: 1.8em 2em 1.3em 2em;
+      background: #dde3f3;
+      border-radius: 0 0 8px 8px;
+      color: #31426a;
+      font-weight: bold;
+      font-size: 1.1em;
+      text-align: center;
+    }
+    .error-mensaje button {
+      margin-top: 1.1em;
+      padding: 0.5em 1.5em;
+      background: #c4c4c4;
+      color: #222;
+      font-weight: 600;
+      border: none;
+      border-radius: 7px;
+      font-size: 0.8em;
+      cursor: pointer;
+    }
+    .error-mensaje button:hover {
+      background: #7490b4;
+    }
+    /* --- Contenedor resultados --- */
+    #resultadosContainer {
+      max-width: 950px;
+      margin: 0em auto 0em auto;
+      display: flex; flex-direction: column; gap: 0;
+    }
+    .tarjeta-texto {
+      background: #fff;
+      box-shadow: 0 1px 6px rgba(49, 66, 106, 0.08);
+      border-radius: 8px;
+      padding: 1.2em 1.5em;
+      margin-bottom: 1em;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .texto-row {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+    .texto-categoria {
+      background: #e5eaff;
+      color: #31426a;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-weight: bold;
+      font-size: 0.95em;
+    }
+    .texto-titulo {
+      font-size: 1.2em; font-weight: bold;
+      margin-left: 0.5em;
+      flex: 2;
+    }
+    .texto-autor, .texto-fecha {
+      font-size: 0.98em;
+      color: #6a6f80;
+    }
+    .texto-fecha {
+      margin-left: 1em;
+    }
+    .texto-sinopsis {
+      margin-top: 0.5em;
+      color: #444a5c;
+      font-size: 1.05em;
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 4;
+      line-clamp: 4;
+      max-height: 5.3em;
+      text-overflow: ellipsis;
+    }
+    /* --- Vista detalle --- */
+    /* --- Menú usuario --- */
+    .nav-usuario {
+      display: grid;
+      /* 5 columnas */
+      grid-template-columns: auto 1fr 1fr 1fr auto;
+      align-items: center;
+      gap: 15px;
+      background: #31426a;
+      padding: 0.5em 1.5em;
+      border-radius: 0;
+      margin-bottom: 0em;
+      box-shadow: 0 2px 9px #dde3f388;
+    }
+    .nav-usuario-boton:first-child {
+      padding-left: 35px;
+      justify-self: start;
+    }
+    .nav-usuario-boton:last-child {
+      padding-right: 35px;
+      justify-self: end;
+    }
+    /* Centra los elementos del medio */
+    .nav-usuario-boton:nth-child(2),
+    .nav-usuario-boton:nth-child(3) {
+      justify-self: center;
+    }
+    .nav-usuario-boton {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: none;
+      border: none;
+      color: #dde3f3;
+      font-weight: 600;
+      font-size: 1.07em;
+      padding: 5px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.16s, color 0.17s;
+    }
+    .nav-usuario-boton i {
+      font-size: 1.1em;
+      color: #dde3f3;
+    }
+    .nav-usuario-boton:hover,
+    .nav-usuario-boton:focus {
+      color: #F8FDBCFF;
+      text-decoration: none;
+    }
+    .nav-usuario-boton:hover i,
+    .nav-usuario-boton:focus i {
+      color: #F8FDBCFF;
+    }
+    .nav-usuario-boton:active {
+      background: #b4bdc6;
+    }
+    .detalle-relato-cabecera {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #e9e8ed;
+      padding: 1rem 2.5rem;
+      margin-top: 0em;
+      border-radius: 0;
+      border-bottom: 2px solid #c4c4c4;
+    }
+    .detalle-relato-titulo {
+      margin: 0;
+      font-size: 2.1rem;
+      font-weight: bold;
+      color: #262135;
+    }
+    .div-nota {
+      display: flex;
+      align-items: center;
+      margin-left: 2em;
+    }
+    .detalle-relato-nota {
+      display: inline-block;
+      min-width: 48px;
+      text-align: center;
+      background: #31426a;
+      color: #fff;
+      font-weight: bold;
+      font-size: 1.17em;
+      border-radius: 9px;
+      padding: 0.45em 1em;
+      box-shadow: 0 2px 8px #b4bdc644;
+      letter-spacing: 0.02em;
+    }
+    .detalle-relato-meta {
+      background: #dde3f3;
+      padding: 0.8rem 2.5rem;
+      display: flex;
+      gap: 2.5em;
+      border-bottom: 2px solid #c4c4c4;
+      border-radius: 0 0 0 0;
+      font-size: 1.08em;
+    }
+    .detalle-relato-meta div {
+      display: flex;
+      align-items: center;
+      gap: 0.35em;
+    }
+    .meta-izq  { text-align: left; }
+    .meta-centro {
+      text-align: center;
+      margin: 0 auto;
+      position: relative;
+      left: -55px;}
+    .meta-der  { text-align: right; min-width: 160px; }
+    .detalle-relato-contenido {
+      background: #fdffd8;
+      padding: 1.8rem 2rem;
+      min-height: 60vh;
+      line-height: 1.7;
+      border-radius: 0;
+      font-size: 1.14em;
+      box-shadow: 0 1px 4px #d0d0d0;
+      margin-bottom: 0;
+      /* Limita la altura */
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    /* --- Pie --- */
+    footer {
+      text-align: center;
+      padding: 1em 0;
+      background: #31426a;
+      color: #fff;
+      font-size: 0.95em;
+      letter-spacing: 0.8px;
+      margin-top: 0em;
+    }
+    /* --- Formulario texto --- */
+    .form-crear-container {
+      max-width: calc(950px - 90px); /* 950px - (45px*2) */
+      width: 100%;
+      margin: 0px auto 45px auto; /* Centrado con espacio externo */
+      padding: 45px; /* Padding interno en todas direcciones */
+      background:  #dde3f2;
+      border-radius: 8px;
+      box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+      box-sizing: border-box; /* ¡Clave! */
+      color: white;
+    }
+    /* Barra de título */
+    .form-header {
+      background: #31426a;
+      color: white;
+      padding: 10px 30px;
+      margin: 0 45px;
+      font-size: 1.5em;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .form-header i {
+      font-size: 1.2em;
+    }
+    /* Contenedor de formulario */
+    .form-inner-wrapper {
+      max-width: 760px; /* 860px (form container) - 100px (45px*2 padding) */
+      margin: 0 auto;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      max-width: 100%;
+      box-sizing: border-box; /* ¡Clave! */
+    }
+    .form-crear-container h2 {
+      color: #31426a;
+      margin-bottom: 1.5em;
+      text-align: center;
+    }
+    .form-group {
+      margin-bottom: 1.5em;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5em;
+      font-weight: bold;
+      color: #444;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 0.8em;
+      border: 1px solid #d1d1d1;
+      border-radius: 4px;
+      font-size: 1em;
+    }
+    .form-group textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+    .form-dual-select {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1em;
+    }
+    .btn-submit {
+      background: #31426a;
+      color: white;
+      padding: 1em 2em;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1.1em;
+      width: 100%;
+      transition: background 0.3s;
+    }
+    .btn-submit:hover {
+      background: #233050;
+    }
+    /* --- SISTEMA DE COMENTARIOS --- */
+    /* --- Caja de comentarios --- */
+    .comentario-barra-outer {
+      background: #f0ecec;
+      padding: 1.5em;
+      display: flex;
+      justify-content: center;
+      border-radius: 0;
+      margin-bottom: 0em;
+    }
+    .comentario-barra-inner {
+      background: #dbdada;
+      border-radius: 0;
+      padding: 1.5em;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-shadow: 0 2px 8px #2221  ;
+    }
+    .comentario-textarea {
+      width: 100%;
+      background: #fff;
+      color: #202020;
+      border: 1.5px solid #b1b1b1;
+      border-radius: 8px;
+      padding: 1.1em;
+      font-size: 1.1em;
+      margin-bottom: 1em;
+      min-height: 3.4em;
+      resize: vertical;
+      box-sizing: border-box;
+    }
+    .comentario-opciones {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2em;
+    }
+    .comentario-check-label {
+      color: #000;
+      font-size: 1em;
+      display: flex;
+      align-items: center;
+      gap: 0.4em;
+      cursor: pointer;
+    }
+    .comentario-boton {
+      padding: 7px 15px;
+      border: none;
+      border-radius: 6px;
+      background: #31426a;
+      color: #fff;
+      font-weight: 600;
+      font-size: 0.9em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .comentario-boton:hover {
+      background: #222e46;
+    }
+    /* --- Estilo comentarios --- */
+    .comentariosContainer{
+      background: #f2eded;
+      padding: 0 0.5em;
+    }
+    .comentario-card {
+      background: #fff;
+      border-radius: 0;
+      box-shadow: 0 1px 7px #e6e6e6;
+      margin: 0em auto 1em auto;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .comentario-titulo {
+      background: #dbdada;
+      color: #262135;
+      font-weight: bold;
+      font-size: 1.05em;
+      padding: 0.75em 1.5em 0.55em 1.5em;
+      border-radius: 0;
+    }
+    .comentario-meta {
+      background: #dde3f3;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 2em;
+      padding: 0.4em 1.5em;
+      font-size: 0.97em;
+      color: #494949;
+    }
+    .comentario-mensaje {
+      padding: 1.3em 1.5em;
+      font-size: 1.05em;
+      color: #212025;
+      background: #fff;
+    }
+    .comentario-acciones {
+      display: flex;
+      justify-content: flex-end;
+      padding: 0.7em 1.5em 1em 1.5em;
+      background: #fff;
+    }
+    /* Botones comentarios */
+    .btn-responder {
+      background: #dde3f3;
+      color: #262135;
+      border: none;
+      border-radius: 6px;
+      padding: 7px 15px;
+      font-size: 0.9em;
+      cursor: pointer;
+      opacity: 0.6; /* desactivado visual */
+    }
+    .btn-responder:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+    .btnEliminarComentario {
+      background: #31426a;           /* Azul principal */
+      color: #fff;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+      border-radius: 6px;
+      padding: 7px 15px;
+      font-size: 0.9em;
+      transition: background 0.19s, box-shadow 0.18s;
+      margin-left: 10px;
+      box-shadow: 0 2px 7px #dde3f399;
+      outline: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .btnEliminarComentario:hover,
+    .btnEliminarComentario:focus {
+      background: #223156;   /* Azul más oscuro al pasar el ratón */
+      color: #fff;
+    }
+    /* --- Estilos perfil -- */
+    .perfil-columnas {
+      display: flex;
+      gap: 30px;
+      align-items: flex-start;
+    }
+    /* Columna izquierda (avatar + info básica + contactos) */
+    .columna-izq {
+      width: 40%;
+      min-width: 280px;
+      background: #f7f7fa;
+      border-radius: 8px;
+      padding: 1.5em;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    /* Columna derecha (textos del usuario) */
+    .columna-der {
+      width: 60%;
+      background: #f7f7fa;
+      border-radius: 8px;
+      padding: 1.5em;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    /* Avatar grande */
+    .contacto-avatar.grande {
+      width: 235px;
+      height: 235px;
+      margin: 0 auto 1.5em auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #d9d5d5; /* Opcional: para ver el área del avatar */
+      border-radius: 8%;
+    }
+    .contacto-avatar.grande i {
+      font-size: 7em;
+    }
+    /* Info usuario */
+    .detalle-email {
+      color: #6a6f80;
+      font-size: 1em;
+      text-align: center;
+    }
+    /* Títulos de sección */
+    .titulo-seccion {
+      color: #31426a;
+      border-bottom: 2px solid #31426a;
+      padding-bottom: 0.5em;
+      margin-bottom: 1.5em;
+    }
+    /* Lista de textos */
+    .lista-textos {
+      display: flex;
+      flex-direction: column;
+      gap: 1em;
+    }
+    .texto-item .texto-titulo {
+      display: flex;
+      align-items: center;
+      padding: 1em;
+      gap: 0.7em;
+      font-size: 1.1em;
+      color: #31426a;
+      margin-bottom: 0.3em;
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .texto-item .texto-titulo .titulo {
+      font-weight: bold; /* Negrita solo para el título */
+    }
+    .texto-item .texto-titulo .texto-fecha {
+      font-size: 0.9em;
+      color: #6a6f80;
+      font-weight: normal; /* Sin negrita para la fecha */
+    }
+    .texto-item:hover {
+      transform: translateY(-2px);
+    }
+    /* Contactos */
+    .lista-contactos {
+      display: flex;
+      flex-direction: column;
+      gap: 1em;
+    }
+    .contacto-info {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      width: 100%;
+      max-width: 200px;
+      gap: 4px;
+    }
+    .contacto-card {
+      background: white;
+      display: flex;
+      justify-content: left;
+      padding: 0.5em;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .contacto-nombre {
+      display: flex;
+      justify-content: left;
+      font-weight: 600;
+      color: #31426a;
+      gap: 8px;
+    }
+    .contacto-icono {
+      font-size: 0.9em;
+      color: #31426a;
+      width: 20px;
+      text-align: center;
+    }
+    /* Ajustes de color para contraste */
+    .form-crear-container {
+      color: #31426a; /* Añadir esto para texto visible */
+      background: #dde3f2 !important;
+    }
+    /* Responsive */
+    @media (max-width: 768px) {
+      .perfil-columnas {
+        flex-direction: column;
+      }
+
+      .columna-izq,
+      .columna-der {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+<header class="header-container">
+  <div class="header-inner">
+    <h1 class="header-titulo">Relatosfera</h1>
+    <div class="header-login">
+      <form class="form-login-linea" action="/index" method="post">
+          <input type="email" id="emailLogin" placeholder="Email" name="email" required>
+          <input type="password" id="passwordLogin" placeholder="Contraseña" name="password" required>
+          <button class="login-btn" id="loginBtn" type="submit">Login</button>
+      </form>
+      <div class="login-links">
+      <a href="registro.html" class="link-registro">Condiciones generales</a>
+      <a href="/registro" class="link-registro">Registrar usuario</a>
+        <a href="/logout" class="link-registro">Logout</a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section id="filtrosContainer">
+  <form id="filtrarCategoriaForm" class="bloque-filtro">
+    <select id="categoriaSelect" name="categoria">
+      <option value="">-- Categoría --</option>
+    </select>
+    <label for="criterioSelect">Orden:</label>
+    <select id="criterioSelect" name="criterio">
+      <option value="notaMedia">Nota Media</option>
+      <option value="fechaPublicacionD">Fecha Descendente</option>
+      <option value="fechaPublicacionA">Fecha Ascendente</option>
+    </select>
+    <button type="submit">Filtrar</button>
+  </form>
+  <form id="buscarTextosForm" class="bloque-filtro">
+    <input type="text" id="subcadenaTextos" name="subcadena" placeholder="Buscar por título o autor..." required>
+    <button type="submit">Buscar</button>
+  </form>
+</section>
+
+<main>
+  <section id="resultadosContainer"></section>
+</main>
+
+<footer>
+  &copy; 2025 Red Social de Relatos. Todos los derechos reservados.
+</footer>
+
+<script>
+  const BASE_URL = 'http://localhost:8080';
+
+  let idTextoActual = null;
+  let usuarioActual = null;
+
+  // Obtenemos usuario actual.
+    fetch('/usuario/me')
+            .then(resp => resp.ok ? resp.json() : Promise.reject('No autenticado'))
+            .then(data => {
+              usuarioActual = data;
+              return data;
+            });
+
+  // --- Vista de texto ---
+  // Obtener parámetro de la URL.
+  function getParameterByName(name) {
+    const url = window.location.href;
+    name = name.replace(/[\[\]]/g, "\\$&");
+    const regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)");
+    const results = regex.exec(url);
+    if (!results) return null;
+    if (!results[2]) return '';
+    return decodeURIComponent(results[2].replace(/\+/g, " "));
+  }
+
+  function volver() {
+    if (typeof idTextoActual === "undefined" || !idTextoActual) {
+      window.location.href = "index.html";
+    } else {
+      cargarDetalleTexto(idTextoActual)
+    }
+  }
+
+  function mostrarFeedback(mensaje) {
+    const contenedor = document.getElementById('resultadosContainer');
+    const textoAMostrar = mensaje || "Operación realizada con éxito.";
+    contenedor.innerHTML = `
+        <div class="ventana-error">
+            <div class="titulo-error">Mensaje informativo:</div>
+            <div class="error-mensaje">
+                <p>✅ ${textoAMostrar}</p>
+                <button onclick="volver()">Volver</button>
+            </div>
+        </div>`;
+  }
+
+  function mostrarError(mensaje) {
+    const contenedor = document.getElementById('resultadosContainer');
+    const textoAMostrar = mensaje || "No se pudo cargar el texto.";
+    contenedor.innerHTML = `
+        <div class="ventana-error">
+            <div class="titulo-error">Se ha producido un error:</div>
+            <div class="error-mensaje">
+                <p>⚠️ ${textoAMostrar}</p>
+                <button onclick="volver()">Volver</button>
+            </div>
+        </div>`;
+  }
+
+  function mostrarErrorComentarios(mensaje) {
+    const contenedor = document.getElementById('comentariosContainer');
+    const textoAMostrar = mensaje || "No se pudieron cargar los comentarios.";
+    contenedor.innerHTML = `
+        <div class="ventana-error">
+            <div class="titulo-error">Se ha producido un error:</div>
+            <div class="error-mensaje">
+                <p>⚠️ ${textoAMostrar}</p>
+            </div>
+        </div>`;
+  }
+
+  // Función para validar idTexto.
+  function validarIdTexto(idTexto) {
+    if (!/^\d+$/.test(idTexto)) {
+      throw new Error('ID incorrecto: solo números permitidos.');
+    }
+    const idNum = parseInt(idTexto);
+    if (idNum <= 0 || isNaN(idNum)) {
+      throw new Error('ID incorrecto: valor fuera de rango.');
+    }
+    return idNum;
+  }
+
+  function cargarDetalleTexto(idTexto) {
+    let idNum;
+    try {
+      idNum = validarIdTexto(idTexto);
+    } catch (error) {
+      mostrarError(error.message);
+      return;
+    }
+
+    fetch(`/texto/${idTexto}`)
+            .then(response => {
+              if (!response.ok) throw new Error("No se encontró el texto.");
+              return response.json();
+            })
+            .then(mostrarDetalleTexto)
+            .catch(error => {
+              mostrarError(error.message || 'Error al cargar el texto.');
+            });
+  }
+
+  // Carga parcial de comentarios.
+  function cargarComentarios(idTexto) {
+    fetch(`/texto/${idTexto}/comentarios`)
+            .then(resp => {
+              if (!resp.ok) throw new Error(`Error ${resp.status}: No se pudieron cargar los comentarios`);
+              return resp.json();
+            })
+            .then(mostrarComentarios)
+            .catch(() => mostrarErrorComentarios("No se pudieron cargar los comentarios."));
+  }
+
+  // Función para enviar comentarios.
+  function enviarComentario(idTexto) {
+    const contenido = document.getElementById('inputComentario').value.trim();
+    const notificar = document.getElementById('notificarRespuesta').checked;
+    const titulo = "Comentario de usuario"; // O puedes pedirlo en otro input
+
+    if (!contenido) {
+      alert("El comentario no puede estar vacío.");
+      return;
+    }
+
+    if (!usuarioActual || !usuarioActual.idUsuario) {
+      alert("Debes iniciar sesión para comentar.");
+      return;
+    }
+
+    const params = new URLSearchParams();
+    params.append('contenidoStr', contenido);
+    params.append('idEmisor', usuarioActual.idUsuario);
+    params.append('tipoStr', 'COMENTARIO');
+    params.append('idTexto', idTexto);
+    params.append('tituloStr', titulo);
+    // No hace falta idPadre ni idReceptor para comentarios raíz
+
+    fetch('/mensaje', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: params
+    })
+            .then(resp => {
+              if (!resp.ok) throw new Error('Error al enviar comentario');
+              return resp.json();
+            })
+            .then(mensajeCreado => {
+              // Limpia el input
+              document.getElementById('inputComentario').value = '';
+              // Opcional: recarga los comentarios
+              //cargarComentarios(idTexto);
+              alert('Comentario publicado.');
+            })
+            .catch(error => {
+              alert('No se pudo enviar el comentario: ' + error.message);
+            });
+  }
+
+  function inyectarMenuUsuario(usuarioActual, texto){
+    if (!usuarioActual) return '';
+
+    // Verificar si el usuario es autor para mostrar editar
+    const esAutor = usuarioActual.idUsuario === texto.autor?.idUsuario;
+
+    return `
+    <nav class="nav-usuario">
+      <button class="nav-usuario-boton" onclick="cargarPerfilUsuario(usuarioActual.idUsuario)">
+        <i class="fas fa-user"></i>
+        <span>Mi Perfil</span>
+      </button>
+      <button class="nav-usuario-boton" onClick="mostrarFormularioCreacion()">
+        <i class="fas fa-plus-circle"></i>
+        <span>Crear</span>
+      </button>
+      ${esAutor ? `
+        <button class="nav-usuario-boton" onclick="mostrarFormularioEdicion(${texto.idTexto})">
+             <i class="fas fa-edit"></i>
+             <span>Editar</span>
+        </button>
+      ` : ''}
+        <button class="nav-usuario-boton" onclick="mostrarFormPuntuacion()">
+            <i class="fas fa-star"></i>
+            <span>Puntuar</span>
+        </button>
+      <button class="nav-usuario-boton" onclick="guardarTexto(${texto.idTexto})">
+        <i class="fas fa-bookmark"></i>
+        <span>Guardar</span>
+      </button>
+    </nav>
+  `;
+  }
+
+  function mostrarDetalleTexto(texto) {
+    // Lo primero obtenemos idTexto actual.
+    idTextoActual = texto.idTexto;
+
+    const categoria = texto.categoria?.categoria ?? 'Sin categoría';
+    const subcategoria = texto.categoria?.subcategoria ?? '';
+    const categoriaCompleta = subcategoria
+            ? `${categoria} > ${subcategoria}`
+            : categoria;
+    const fecha = formatearFecha(texto.fechaPublicacion);
+    // Puedes mejorar este renderizado según tus necesidades de estilos
+    const container = document.getElementById('resultadosContainer');
+    container.innerHTML = `
+        ${inyectarMenuUsuario(usuarioActual, texto)}
+        <div class="detalle-relato-cabecera">
+        <h2 class="detalle-relato-titulo">${texto.titulo}</h2>
+        <div class="puntuacion-wrapper">
+            <form id="puntuacionForm" class="puntuacion-form" style="display: none;">
+                <div class="puntuacion-input-group">
+                    <input type="number"
+                           name="nota"
+                           min="1"
+                           max="10"
+                           step="0.5"
+                           placeholder="1-10"
+                           required
+                           class="puntuacion-input">
+                    <button type="submit" class="puntuacion-btn">
+                        <i class="fas fa-check"></i>
+                    </button>
+                </div>
+            </form>
+            <div class="detalle-relato-nota-container">
+                <span class="detalle-relato-nota">${texto.notaMedia?.toFixed(1) || 's/n'}</span>
+            </div>
+        </div>
+        </div>
+        <div class="detalle-relato-meta">
+            <div class="meta-izq">
+                <strong>Categoria: </strong>${categoriaCompleta}
+            </div>
+            <div class="meta-centro">
+                <strong>Autor: </strong>
+                <a href="#" onclick="cargarPerfilUsuario(${texto.autor.idUsuario})" class="detalle-relato-autor" style="color: #314173;">
+                    ${texto.autor.nombre} ${texto.autor.apellido}
+                </a>
+            </div>
+            <div class="meta-der">
+                <strong>Fecha: </strong>${fecha}
+            </div>
+        </div>
+        <div class="detalle-relato-contenido">
+            ${texto.contenido.replace(/\n/g, '<br>')}
+        </div>
+        <br>
+        <div class="comentario-barra-outer">
+        <div class="comentario-barra-inner">
+            <textarea
+            id="inputComentario"
+            placeholder="Escribe un comentario..."
+            rows="2"
+            maxlength="300"
+            class="comentario-textarea">
+            </textarea>
+            <div class="comentario-opciones">
+            <label class="comentario-check-label">
+                <button id="enviarComentarioBtn" class="comentario-boton">Enviar</button>
+                <input type="checkbox" id="notificarRespuesta" />
+                Notificarme cuando haya respuestas.
+            </label>
+
+            </div>
+        </div>
+        </div>
+        <div class="comentariosContainer" id="comentariosContainer"></div>
+    `;
+    // Configuramos eventos para puntuación.
+    configurarPuntuacion(texto.idTexto);
+    // En el evento onClick enviamos mensaje.
+    document.getElementById('enviarComentarioBtn').onclick = function() {
+      enviarComentario(texto.idTexto);
+    };
+
+    fetch(`/texto/${texto.idTexto}/comentarios`)
+            .then(resp => {
+              if (!resp.ok) {
+                throw new Error(`Error ${resp.status}: No se pudieron cargar los comentarios`);
+              }
+              return resp.json();
+            })
+            .then(mostrarComentarios)
+            .catch(error => mostrarErrorComentarios("No se pudieron cargar los comentaios."));
+  }
+
+  function eliminarComentario(idMensaje) {
+    fetch(`/mensaje/${idMensaje}/eliminar`, { method: 'PUT'})
+      .then(resp => {
+        if (!resp.ok) throw new Error('No se pudo eliminar el comentario');
+        return resp.text();
+      })
+      .then(() => { cargarComentarios(idTextoActual);
+      })
+      .catch(err => mostrarErrorComentarios('No se pudo eliminar el comentario.'));
+  }
+
+  // Mostrar comentarios de un texto.
+  function mostrarComentarios(comentarios) {
+    const contenedor = document.getElementById('comentariosContainer');
+    contenedor.innerHTML = '';
+
+    if (!Array.isArray(comentarios) || comentarios.length === 0) {
+      contenedor.innerHTML = '<div style="color:#888; text-align:center; ' +
+              'padding:1em;">Sin comentarios por ahora.</div>';
+      return;
+    }
+
+    comentarios.forEach(mensaje => {
+      // Solo mostramos comentarios raíz (tipo COMENTARIO)
+      if (mensaje.tipo !== "COMENTARIO" && mensaje.tipo !== "RESCOMENTARIO") return;
+
+      // Formatea la fecha
+      const fecha = formatearFecha(mensaje.fechaEnvio);
+
+      // Verifica si puede eliminar este comentario
+      let puedeEliminar = usuarioActual &&
+              (mensaje.emisor?.idUsuario === usuarioActual.idUsuario ||
+                      usuarioActual.rol === "ADMIN" || usuarioActual.rol === "MODERADOR");
+
+      // Monta el bloque HTML
+      const comentarioDiv = document.createElement('div');
+      comentarioDiv.className = 'comentario-card';
+
+      comentarioDiv.innerHTML = `
+      <div class="comentario-titulo">${mensaje.titulo || '(Sin título)'}</div>
+      <div class="comentario-meta">
+        <span class="comentario-autor">
+          <a href="/usuario?idUsuario=${mensaje.emisor?.idUsuario || ''}">
+            ${mensaje.emisor?.alias || 'Usuario'}
+          </a>
+        </span>
+        <span class="comentario-fecha">${fecha}</span>
+      </div>
+      <div class="comentario-mensaje">
+        ${mensaje.contenido}
+      </div>
+      <div class="comentario-acciones">
+        <button class="btn-responder" disabled>Responder</button>
+        ${
+          puedeEliminar
+            ? `<button class="btnEliminarComentario" data-id="${mensaje.idMensaje}">
+                Eliminar</button>`
+            : ''
+        }
+      </div>
+    `;
+      contenedor.appendChild(comentarioDiv);
+    });
+
+    // Asocia el evento a todos los botones eliminar.
+    document.querySelectorAll('.btnEliminarComentario').forEach(btn => {
+      btn.onclick = function() {
+        const idMensaje = this.getAttribute('data-id');
+        if (confirm('¿Quieres eliminar este comentario?')) {
+          eliminarComentario(idMensaje);
+        }
+      };
+    });
+  }
+
+  // --- Vista principal ---
+  // Obtener autor.
+  const cacheAutores = {};
+  async function obtenerNombreAutor(idAutor) {
+    if (cacheAutores[idAutor]) return cacheAutores[idAutor];
+    try {
+      const res = await fetch(`${BASE_URL}/usuario/${idAutor}`);
+      if (!res.ok) return 'Autor desconocido';
+      const usuario = await res.json();
+      const nombreCompleto = usuario.alias || (usuario.nombre + ' ' + usuario.apellido);
+      cacheAutores[idAutor] = nombreCompleto;
+      return nombreCompleto;
+    } catch {
+      return 'Autor desconocido';
+    }
+  }
+
+  // Formateo de fecha (2025-05-12T22:51:58).
+  function formatearFecha(fechaStr) {
+    if (!fechaStr) return '';
+    const fecha = new Date(fechaStr);
+    const opciones = { day: '2-digit', month: '2-digit', year: 'numeric' };
+    return fecha.toLocaleDateString('es-ES', opciones);
+  }
+
+  // Mostrar resultados bonitos en tarjetas
+  async function mostrarResultados(textos) {
+    const contenedor = document.getElementById('resultadosContainer');
+    contenedor.innerHTML = '';
+
+    if (!Array.isArray(textos) || textos.length === 0) {
+      contenedor.innerHTML = '<div style="padding:1em; color:#666;">' +
+              'No hay textos para mostrar.</div>';
+      return;
+    }
+
+    // Carga asíncrona de autores por cada texto.
+    for (const texto of textos) {
+      const div = document.createElement('div');
+      div.classList.add('tarjeta-texto');
+
+      // Formatea categoría
+      const cat = texto.categoria ? texto.categoria.categoria : 'SIN CATEGORÍA';
+
+      // Autor.
+      let autor;
+      if (texto.autor && (texto.autor.alias || texto.autor.nombre)) {
+        autor = texto.autor.alias || (texto.autor.nombre + ' ' + texto.autor.apellido);
+      } else if (texto.idAutor) {
+        autor = await obtenerNombreAutor(texto.idAutor);
+      } else {
+        autor = 'Autor desconocido';
+      }
+
+      // Fecha.
+      const fecha = formatearFecha(texto.fechaPublicacion);
+
+      // Categoría, título, autor, fecha.
+      const row = document.createElement('div');
+      row.classList.add('texto-row');
+
+      const spanCategoria = document.createElement('span');
+      spanCategoria.className = 'texto-categoria';
+      spanCategoria.textContent = cat;
+
+      const spanTitulo = document.createElement('span');
+      spanTitulo.className = 'texto-titulo';
+      const tituloLink = document.createElement('a');
+      tituloLink.textContent = texto.titulo || '(Sin título)';
+      // Ojo a este enlace.
+      tituloLink.href = `index?idTexto=${texto.idTexto}`;
+      tituloLink.className = 'titulo-relato';
+      spanTitulo.appendChild(tituloLink);
+
+      const spanAutor = document.createElement('span');
+      spanAutor.className = 'texto-autor';
+      spanAutor.textContent = autor;
+
+      const spanFecha = document.createElement('span');
+      spanFecha.className = 'texto-fecha';
+      spanFecha.textContent = fecha;
+
+      // Añadir los spans en orden
+      row.appendChild(spanCategoria);
+      row.appendChild(spanTitulo);
+      row.appendChild(spanAutor);
+      row.appendChild(spanFecha);
+
+      // Solo agregas la fila, no el link suelto
+      div.appendChild(row);
+
+      // Sinopsis
+      const sinopsis = document.createElement('div');
+      sinopsis.classList.add('texto-sinopsis');
+      sinopsis.textContent = texto.sinopsis || '(Sin sinopsis)';
+      div.appendChild(sinopsis);
+
+      contenedor.appendChild(div);
+    }
+  }
+  // --- Fin de vista principal ---
+
+  // --- PETICIONES Y EVENTOS ---
+  // Buscar textos por subcadena
+  document.getElementById('buscarTextosForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const subcadena = document.getElementById('subcadenaTextos').value.trim();
+    fetch(`${BASE_URL}/textos?subcadena=${encodeURIComponent(subcadena)}`)
+            .then(resp => resp.json())
+            .then(mostrarResultados)
+            .catch(err => alert('No se encontraron coincidencias.'));
+    this.reset();
+  });
+
+  // Filtrar por categoría y criterio.
+  document.getElementById('filtrarCategoriaForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const categoria = document.getElementById('categoriaSelect').value.trim();
+    const criterio = document.getElementById('criterioSelect').value;
+    if (!categoria) return alert('Selecciona una categoría');
+
+    const params = new URLSearchParams({ categoria });
+    if (criterio) params.append('criterio', criterio);
+
+    fetch(`${BASE_URL}/textos?${params.toString()}`)
+            .then(resp => resp.json())
+            .then(mostrarResultados)
+            .catch(err => alert('No se pudo filtrar textos.'));
+  });
+
+  function cargarCategoriasFormulario() {
+    fetch(`${BASE_URL}/categorias/subcategorias`)
+            .then(response => response.json())
+            .then(data => {
+              const categoriaSelect = document.getElementById('categoria');
+              const subcategoriaSelect = document.getElementById('subcategoria');
+
+              // Cargar categorías principales
+              data.categorias.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                categoriaSelect.appendChild(option);
+              });
+
+              // Cargar todas las subcategorías al inicio
+              subcategoriaSelect.innerHTML = '<option value="">Ninguna</option>';
+              data.subcategorias.forEach(sub => {
+                const subcat = sub.split('_')[1]; // Asume formato "CATEGORIA_SUBCATEGORIA"
+                const option = document.createElement('option');
+                option.value = subcat;
+                option.textContent = subcat;
+                subcategoriaSelect.appendChild(option);
+              });
+            })
+            .catch(error => console.error('Error:', error));
+  }
+
+  // Construir formulario para crear texto.
+  function mostrarFormularioCreacion() {
+    const container = document.getElementById('resultadosContainer');
+    container.style.background = '#f2eded';
+    container.innerHTML = `
+    <div class="form-header">
+        <i class="fas fa-plus-circle"></i> Crear Nuevo Texto
+    </div>
+    <div class="form-crear-container">
+     <div class="form-inner-wrapper">
+      <form id="crearTextoForm">
+        <div class="form-group">
+          <label for="titulo">Título:</label>
+          <input type="text" id="titulo" name="titulo" required>
+        </div>
+
+        <div class="form-group">
+          <label for="contenido">Contenido:</label>
+          <textarea id="contenido" name="contenido" required></textarea>
+        </div>
+
+        <div class="form-dual-select">
+          <div class="form-group">
+            <label for="estado">Estado:</label>
+            <select id="estado" name="estado" required>
+              <option value="BORRADOR">Borrador</option>
+              <option value="PUBLICADO">Publicar</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="idioma">Idioma:</label>
+            <input type="text" id="idioma" name="idioma">
+          </div>
+        </div>
+
+        <div class="form-dual-select">
+          <div class="form-group">
+            <label>Categoría:</label>
+            <select id="categoria" name="categoria" required>
+                <option value="MISTERIO">Misterio</option>
+                <option value="THRILLER">Thriller</option>
+                <option value="DRAMA">Drama</option>
+                <option value="FANTASIA">Fantasía</option>
+                <option value="CIENCIAFIC">Ciencia ficción</option>
+                <option value="HISTORICO">Histórico</option>
+                <option value="AVENTURA">Aventura</option>
+                <option value="FANFIC">Fanfic</option>
+                <option value="BIOGRAFIA">Biografía</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Subcategoría (opcional):</label>
+            <select id="subcategoria" name="subcategoria">
+                <option value="OPCIONAL">Ninguna</option>
+                <option value="CRIMEN">Crimen</option>
+                <option value="POLICIACO">Policiaco</option>
+                <option value="ROMANCE">Romance</option>
+                <option value="PSICOLOGICO">Psicológico</option>
+                <option value="CONSPIRACION">Conspiración</option>
+                <option value="FUTURISTA">Futurista</option>
+                <option value="TERROR">Terror</option>
+                <option value="PARANORMAL">Paranormal</option>
+                <option value="JUVENIL">Juvenil</option>
+                <option value="UTOPIA">Utopía</option>
+                <option value="DISTOPIA">Distopía</option>
+                <option value="BELICO">Bélico</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="sinopsis">Sinopsis:</label>
+          <textarea id="sinopsis" name="sinopsis"></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit">Publicar Texto</button>
+      </form>
+     </div>
+    </div>
+  `;
+    configurarEnvioFormulario();
+  }
+
+  // Configurar envío del formulario (mejorado)
+  function configurarEnvioFormulario() {
+    document.getElementById('crearTextoForm')?.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+      data.idAutor = usuarioActual.idUsuario;
+
+      // Convertir subcategoría vacía a null.
+      if (data.subcategoria === "OPCIONAL") {
+        data.subcategoria = null;
+      }
+
+      // Convertir a URLSearchParams (para enviar como x-www-form-urlencoded)
+      const params = new URLSearchParams();
+      for (const key in data) {
+        params.append(key, data[key]);
+      }
+
+      // Enviar datos al backend
+      fetch(`${BASE_URL}/texto`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: params
+      })
+              .then(response => {
+                if (!response.ok) {
+                  return response.text().then(text => { throw new Error(text); });
+                }
+                return response.json();
+              })
+              .then(textoCreado => {
+                mostrarFeedback('Texto creado correctamente.');
+                // No existe el id antes de crearlo.
+                const idTexto = textoCreado.idTexto;
+                setTimeout(() => cargarDetalleTexto(idTexto), 1500);
+              })
+              .catch(error => {
+                mostrarError('Error al crear texto: \n' + error.message);
+              });
+    });
+  }
+
+  // Construir formulario para editar texto.
+  function mostrarFormularioEdicion(idTexto) {
+    fetch(`${BASE_URL}/texto/${idTexto}`)
+            .then(response => response.json())
+            .then(texto => {
+              const container = document.getElementById('resultadosContainer');
+              container.style.background = '#f2eded';
+
+              // Determinar opciones de estado disponibles
+              let opcionesEstado = '';
+              if (texto.estado === 'BORRADOR') {
+                opcionesEstado = `
+                    <option value="BORRADOR" selected>Borrador</option>
+                    <option value="PUBLICADO">Publicar</option>
+                `;
+              } else if (texto.estado === 'PUBLICADO') {
+                opcionesEstado = `<option value="PUBLICADO" selected>Publicado (no editable)</option>`;
+              } else { // Estado OCULTO (solo para admins)
+                opcionesEstado = `<option value="${texto.estado}" selected>Estado actual: ${texto.estado}</option>`;
+              }
+
+              container.innerHTML = `
+                <div class="form-header">
+                    <i class="fas fa-edit"></i> Editar Texto
+                </div>
+                <div class="form-crear-container">
+                    <div class="form-inner-wrapper">
+                        <form id="editarTextoForm">
+                            <input type="hidden" id="idTexto" name="idTexto" value="${texto.idTexto}">
+
+                            <div class="form-group">
+                                <label for="titulo">Título:</label>
+                                <input type="text" id="titulo" name="titulo" value="${texto.titulo || ''}" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="contenido">Contenido:</label>
+                                <textarea id="contenido" name="contenido" required>${texto.contenido || ''}</textarea>
+                            </div>
+
+                            <div class="form-dual-select">
+                                <div class="form-group">
+                                    <label for="estado">Estado:</label>
+                                    <select id="estado" name="estado" required
+                                            ${texto.estado === 'PUBLICADO' ? 'disabled' : ''}>
+                                        ${opcionesEstado}
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label for="idioma">Idioma:</label>
+                                    <input type="text" id="idioma" name="idioma" value="${texto.idioma || ''}">
+                                </div>
+                            </div>
+
+                            <div class="form-dual-select">
+                                <div class="form-group">
+                                    <label>Categoría:</label>
+                                    <select id="categoria" name="categoria" required>
+                                        <option value="MISTERIO" ${texto.categoria?.categoria === 'MISTERIO' ? 'selected' : ''}>Misterio</option>
+                                        <option value="THRILLER" ${texto.categoria?.categoria === 'THRILLER' ? 'selected' : ''}>Thriller</option>
+                                        <option value="DRAMA" ${texto.categoria?.categoria === 'DRAMA' ? 'selected' : ''}>Drama</option>
+                                        <option value="FANTASIA" ${texto.categoria?.categoria === 'FANTASIA' ? 'selected' : ''}>Fantasía</option>
+                                        <option value="CIENCIAFIC" ${texto.categoria?.categoria === 'CIENCIAFIC' ? 'selected' : ''}>Ciencia Ficción</option>
+                                        <option value="HISTORICO" ${texto.categoria?.categoria === 'HISTORICO' ? 'selected' : ''}>Histórico</option>
+                                        <option value="AVENTURA" ${texto.categoria?.categoria === 'AVENTURA' ? 'selected' : ''}>Aventura</option>
+                                        <option value="FANFIC" ${texto.categoria?.categoria === 'FANFIC' ? 'selected' : ''}>Fanfic</option>
+                                        <option value="BIOGRAFIA" ${texto.categoria?.categoria === 'BIOGRAFIA' ? 'selected' : ''}>Biografía</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Subcategoría:</label>
+                                    <select id="subcategoria" name="subcategoria">
+                                        <option value="">Ninguna</option>
+                                        <option value="CRIMEN" ${texto.categoria?.subcategoria === 'CRIMEN' ? 'selected' : ''}>Crimen</option>
+                                        <option value="POLICIACO" ${texto.categoria?.subcategoria === 'POLICIACO' ? 'selected' : ''}>Policiaco</option>
+                                        <option value="ROMANCE" ${texto.categoria?.subcategoria === 'ROMANCE' ? 'selected' : ''}>Romance</option>
+                                        <option value="PSICOLOGICO" ${texto.categoria?.subcategoria === 'PSICOLOGICO' ? 'selected' : ''}>Psicológico</option>
+                                        <option value="CONSPIRACION" ${texto.categoria?.subcategoria === 'CONSPIRACION' ? 'selected' : ''}>Conspiración</option>
+                                        <option value="FUTURISTA" ${texto.categoria?.subcategoria === 'FUTURISTA' ? 'selected' : ''}>Futurista</option>
+                                        <option value="TERROR" ${texto.categoria?.subcategoria === 'TERROR' ? 'selected' : ''}>Terror</option>
+                                        <option value="PARANORMAL" ${texto.categoria?.subcategoria === 'PARANORMAL' ? 'selected' : ''}>Paranormal</option>
+                                        <option value="JUVENIL" ${texto.categoria?.subcategoria === 'JUVENIL' ? 'selected' : ''}>Juvenil</option>
+                                        <option value="UTOPIA" ${texto.categoria?.subcategoria === 'UTOPIA' ? 'selected' : ''}>Utopía</option>
+                                        <option value="DISTOPIA" ${texto.categoria?.subcategoria === 'DISTOPIA' ? 'selected' : ''}>Distopía</option>
+                                        <option value="BELICO" ${texto.categoria?.subcategoria === 'BELICO' ? 'selected' : ''}>Bélico</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="sinopsis">Sinopsis:</label>
+                                <textarea id="sinopsis" name="sinopsis">${texto.sinopsis || ''}</textarea>
+                            </div>
+
+                            <button type="submit" class="btn-submit">Actualizar Texto</button>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+              configurarFormularioEdicion(texto.estado);
+            })
+            .catch(error => mostrarError('No se pudo cargar el texto para edición'));
+  }
+
+  function configurarFormularioEdicion(estadoActual) {
+    document.getElementById('editarTextoForm')?.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const formData = new FormData(this);
+      const data = Object.fromEntries(formData.entries());
+      const idTexto = data.idTexto;
+
+      // Si el estado era PUBLICADO, mantenerlo fijo
+      if (estadoActual === 'PUBLICADO') {
+        data.estado = 'PUBLICADO';
+      }
+
+      // Limpiar valores vacíos
+      if (data.subcategoria === "") data.subcategoria = null;
+
+      const params = new URLSearchParams();
+      for (const key in data) {
+        if (data[key]) params.append(key, data[key]);
+      }
+
+      fetch(`${BASE_URL}/texto/${idTexto}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: params
+      })
+              .then(response => {
+                if (!response.ok) throw new Error('Error en la actualización');
+                return response.json();
+              })
+              .then(textoActualizado => {
+                mostrarFeedback('Texto actualizado correctamente');
+                setTimeout(() => cargarDetalleTexto(idTexto), 1500);
+              })
+              .catch(error => {
+                mostrarError('Error al actualizar: ' + error.message);
+              });
+    });
+  }
+
+  // Sistema de puntuación.
+  let formularioPuntuacionVisible = false;
+
+  function mostrarFormPuntuacion() {
+    const form = document.getElementById('puntuacionForm');
+    form.style.display = formularioPuntuacionVisible ? 'none' : 'flex';
+    formularioPuntuacionVisible = !formularioPuntuacionVisible;
+
+    if (formularioPuntuacionVisible) {
+      form.querySelector('input').focus();
+    }
+  }
+
+  function configurarPuntuacion(idTexto) {
+    const form = document.getElementById('puntuacionForm');
+    const input = form.querySelector('input');
+
+    form.onsubmit = function(e) {
+      e.preventDefault();
+      enviarPuntuacion(idTexto, input.value);
+    };
+  }
+
+  // Enviar puntuación.
+  function enviarPuntuacion(idTexto, nota) {
+    const idUsuario = usuarioActual.idUsuario;
+
+    if (!nota || nota < 1 || nota > 10) {
+      mostrarError('La nota debe estar entre 1 y 10');
+      return;
+    }
+
+    fetch(`${BASE_URL}/texto/${idTexto}/nota/${idUsuario}?nota=${nota}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+    })
+            .then(response => {
+              if (!response.ok) throw new Error('Error al enviar puntuación');
+              return response.json();
+            })
+            .then(notaTexto => {
+              // Actualizar la nota media
+              document.querySelector('.detalle-relato-nota').textContent =
+                      notaTexto.texto.notaMedia.toFixed(1);
+              mostrarFormPuntuacion();
+              mostrarFeedback('Puntuación registrada.');
+              setTimeout(() => cargarDetalleTexto(idTexto), 1500);
+            })
+            .catch(error => {
+              mostrarError(error.message);
+              mostrarFormPuntuacion();
+            });
+  }
+
+  // Asegura la carga de cualquier perfil.
+  function cargarPerfilUsuario(idUsuario) {
+    if (usuarioActual == null) {
+      fetch(`${BASE_URL}/usuario/${idUsuario}/mostrar`)
+              .then(response => {
+                if (!response.ok) throw new Error('Usuario no encontrado');
+                return response.json();
+              })
+              .then(usuario => mostrarPerfilUsuario(usuario))
+              .catch(error => mostrarError(error.message));
+    } else if (usuarioActual && usuarioActual.idUsuario === idUsuario) {
+      mostrarPerfilUsuario(usuarioActual);
+    } else {
+      fetch(`${BASE_URL}/usuario/${idUsuario}/mostrar`)
+              .then(response => {
+                if (!response.ok) throw new Error('Usuario no encontrado');
+                return response.json();
+              })
+              .then(usuario => mostrarPerfilUsuario(usuario))
+              .catch(error => mostrarError(error.message));
+    }
+  }
+
+  // Cargar el perfil de usuarioActual.
+  function mostrarPerfilUsuario(usuario) {
+    const container = document.getElementById('resultadosContainer');
+    container.style.background = '#f2eded';
+    // Plantilla perfil.
+    container.innerHTML = `
+        <div class="form-header">
+            <i class="fas fa-user"></i> Perfil de usuario
+        </div>
+        <div class="form-crear-container">
+            <div class="perfil-columnas">
+                <!-- Columna izquierda - Info usuario y contactos -->
+                <div class="columna-izq">
+                    <div class="info-usuario">
+                        <div class="contacto-avatar grande">
+                            ${usuario.avatarURL
+                              ? `<img src="${usuario.avatarURL}" alt="Avatar de ${usuario.alias}" class="avatar-img">`
+                              : `<i class="fas fa-user"></i>`
+                            }
+                        </div>
+                        <div class="contacto-info">
+                            <h3>${usuario.nombre} ${usuario.apellido}</h3>
+                            <div class="detalle-email">${usuario.email}</div>
+                        </div>
+                    </div>
+                    <h3 class="titulo-seccion">Contactos (<span id="numContactos">0</span>)</h3>
+                    <div class="lista-contactos" id="listaContactos"></div>
+                </div>
+
+                <!-- Columna derecha - Textos del usuario -->
+                <div class="columna-der">
+                    <h3 class="titulo-seccion">Textos (<span id="numTextos">0</span>)</h3>
+                    <div class="lista-textos" id="listaTextos"></div>
+                </div>
+            </div>
+        </div>`;
+        // Cargar datos
+        cargarContactos(usuario);
+        cargarTextosUsuario(usuario);
+  }
+
+  function cargarContactos(usuario) {
+    fetch(`${BASE_URL}/contactos?idUsuario=${usuario.idUsuario}`)
+            .then(resp => resp.json())
+            .then(contactos => {
+              mostrarContactos(contactos);
+              document.getElementById('numContactos').textContent = contactos.length || 0;
+            })
+            .catch(error => mostrarError('Error cargando contactos: ' + error.message));
+  }
+
+  // Mostrar contactos de usuarioActual.
+  function mostrarContactos(contactos) {
+    const lista = document.getElementById('listaContactos');
+    if (!contactos || contactos.length === 0) {
+      lista.innerHTML = '<div class="sin-contactos">No tienes contactos aún</div>';
+      return;
+    }
+
+    lista.innerHTML = contactos.map(contacto => `
+        <div class="contacto-card">
+            <div class="contacto-info">
+                <div class="contacto-nombre">
+                    <i class="fas fa-user contacto-icono"></i>
+                    <span>${contacto.nombre} ${contacto.apellido}</span>
+                </div>
+            </div>
+        </div>
+    `).join('');
+  }
+
+  // Nueva función para cargar textos del usuario
+  function cargarTextosUsuario(usuario) {
+    fetch(`${BASE_URL}/usuario/${usuario.idUsuario}/textos`)
+            .then(resp => resp.json())
+            .then(textos => {
+               mostrarTextosUsuario(textos);
+               document.getElementById('numTextos').textContent = textos.length || 0;
+            })
+            .catch(error => console.error('Error:', error));
+  }
+
+  function mostrarTextosUsuario(textos) {
+    const container = document.getElementById('listaTextos');
+
+    if (!textos || textos.length === 0) {
+      container.innerHTML = '<div class="sin-datos">No hay textos publicados.</div>';
+      return;
+    }
+
+    container.innerHTML = textos.map(texto => `
+        <div class="texto-item" onclick="cargarDetalleTexto(${texto.idTexto})">
+            <div class="texto-titulo">
+                <span class="titulo">${texto.titulo}</span>
+                <span class="texto-fecha">${formatearFecha(texto.fechaPublicacion)}</span>
+            </div>
+        </div>
+    `).join('');
+  }
+
+  // Cargar categorías dinámicamente
+  document.addEventListener('DOMContentLoaded', function() {
+    const idTexto = getParameterByName('idTexto');
+
+    // Cargar categorías siempre.
+    fetch(`${BASE_URL}/categorias/subcategorias`)
+            .then(resp => resp.json())
+            .then(data => {
+              const categorias = data.categorias || [];
+              const select = document.getElementById('categoriaSelect');
+              categorias.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                select.appendChild(option);
+              });
+            })
+            .catch(err => { /* Nada, deja el select vacío */ });
+
+    if (idTexto) {
+      cargarDetalleTexto(idTexto)
+              .catch(() => {
+                // Fallback a lista si falla.
+                cargarTextosPorDefecto();
+              });
+    } else {
+      cargarTextosPorDefecto();
+    }
+  });
+
+  function cargarTextosPorDefecto() {
+    // Cargar textos por defecto.
+    fetch(`${BASE_URL}/textos?criterio=fechaPublicacionD`)
+            .then(resp => resp.json())
+            .then(mostrarResultados);
+  }
+</script>
+</body>
+</html>

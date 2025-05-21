@@ -13,17 +13,30 @@ public class Etiqueta {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idEtiqueta;
 
-    @Column(unique = true, nullable = false)
-    private String nombre;  // Ejemplo: "#misterio", "#terror"
+    @Column(unique = true, nullable = false, length=30)
+    private String nombre;
 
-    private String color;   // Ejemplo: "#FF5733"
+    // Contador para medir popularidad.
+    @Column(nullable = false)
+    private Integer popularidad;
+
+    @Column(nullable = false)
+    private Boolean permitida;
 
     @JsonIgnore
     @ManyToMany(mappedBy = "etiquetas")
     private Set<Texto> textos;
 
-    // Getters y Setters.
+    // Constructor vacío.
+    public Etiqueta() {}
 
+    public Etiqueta(String nombre) {
+        this.nombre = nombre;
+        this.popularidad = 0;
+        this.permitida = true;
+    }
+
+    // Getters y Setters.
     public Long getIdEtiqueta() {
         return idEtiqueta;
     }
@@ -32,20 +45,34 @@ public class Etiqueta {
         this.idEtiqueta = idEtiqueta;
     }
 
-    public String getNombre() {
-        return nombre;
-    }
+    public String getNombre() { return nombre; }
 
     public void setNombre(String nombre) {
         this.nombre = nombre;
     }
 
-    public String getColor() {
-        return color;
+    public Integer getPopularidad() {
+        return popularidad;
     }
 
-    public void setColor(String color) {
-        this.color = color;
+    public void setPopularidad(Integer popularidad) {
+        this.popularidad = popularidad;
+    }
+
+    public Boolean getPermitida() { return permitida; }
+
+    public void setPermitida(Boolean permitida){ this.permitida = permitida; }
+
+    public Set<Texto> getTextos() { return textos; }
+
+    // Setea la lista completa de textos.
+    public void setTextos(Set<Texto> textos) {
+        this.textos = textos;
+    }
+
+    // Añade un texto a la lista.
+    public void addTexto(Texto texto) {
+        this.textos.add(texto);
     }
 
     @Override
@@ -58,18 +85,28 @@ public class Etiqueta {
         }
 
         Etiqueta etiqueta = (Etiqueta) obj;
-        if (nombre != null && nombre.equalsIgnoreCase(etiqueta.nombre)){
-            return true;
-        } else {
-            return false;
+        // Si existe idEtiqueta comparamos por id.
+        if (this.idEtiqueta != null && etiqueta.idEtiqueta != null) {
+            return this.idEtiqueta.equals(etiqueta.idEtiqueta);
         }
+        // Si no, comparamos etiqueta por nombre.
+        if (nombre != null && etiqueta.nombre != null) {
+            return this.nombre.equals(etiqueta.nombre);
+        }
+        return false;
     }
 
     @Override
     public int hashCode() {
-        if (nombre == null) {
-            return 0;
+        // Si tiene ID, usamos su hash.
+        if (this.idEtiqueta != null) {
+            return this.idEtiqueta.hashCode();
         }
-        return nombre.toLowerCase().hashCode();
+
+        // Si no tiene ID usamos nombre.
+        if (this.nombre != null) {
+            return this.nombre.toLowerCase().hashCode();
+        }
+        return 0;
     }
 }

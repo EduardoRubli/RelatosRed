@@ -8,7 +8,6 @@ import java.time.LocalDateTime;
         @UniqueConstraint(columnNames = {"idUsuario1", "idUsuario2"})
 })
 public class Contacto {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idContacto;
@@ -21,8 +20,16 @@ public class Contacto {
     @JoinColumn(name = "idUsuario2", nullable = false)
     private Usuario usuario2;
 
-    @Column(nullable = false)
-    private String estado; // "pendiente", "aceptado", "bloqueado"
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 12)
+    private EstadoContacto estado;
+
+    public enum EstadoContacto {
+        PENDIENTE,
+        ACEPTADO,
+        RECHAZADO,
+        BLOQUEADO
+    }
 
     private LocalDateTime fechaContacto;
 
@@ -51,11 +58,11 @@ public class Contacto {
         this.usuario2 = usuario2;
     }
 
-    public String getEstado() {
+    public EstadoContacto getEstado() {
         return estado;
     }
 
-    public void setEstado(String estado) {
+    public void setEstado(EstadoContacto estado) {
         this.estado = estado;
     }
 

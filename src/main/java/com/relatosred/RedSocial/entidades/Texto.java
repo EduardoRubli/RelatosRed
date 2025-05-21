@@ -18,11 +18,14 @@ public class Texto {
     @JoinColumn(name = "idAutor", nullable = false)
     private Usuario autor;
 
+    @Column(nullable=false)
     private String titulo;
 
     @Lob // En MySQL se mapea a TEXT.
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String contenido;
 
+    @Column(nullable=false, length=64, unique=true)
     private String hashSHA256;
 
     private LocalDateTime fechaPublicacion;
@@ -36,11 +39,16 @@ public class Texto {
         BORRADOR, PUBLICADO, OCULTO
     }
 
-    private String idioma;
-    private String sinopsis;
-    private Double notaMedia;
     // Borrado blando de texto.
     private Boolean eliminado = false;
+
+    private String idioma;
+
+    @Lob
+    @Column(columnDefinition="TEXT")
+    private String sinopsis;
+
+    private Double notaMedia;
 
     @ManyToOne // Categorías.
     @JoinColumn(name = "idCategoria", nullable = false)
@@ -62,9 +70,8 @@ public class Texto {
     @OneToMany(mappedBy = "texto", cascade = CascadeType.ALL)
     private Set<Imagen> imagenesInsertadas = new HashSet<>();
 
-    // Etiquetas.
-    @JsonIgnore
-    @ManyToMany
+    @JsonIgnore // Etiquetas.
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
             name = "TextoEtiqueta",
             joinColumns = @JoinColumn(name = "idTexto"),
@@ -90,6 +97,14 @@ public class Texto {
     // Getters y Setters.
     public Long getIdTexto() {
         return idTexto;
+    }
+
+    public Usuario getAutor(){
+        return autor;
+    }
+
+    public void setAutor(Usuario autor) {
+        this.autor = autor;
     }
 
     public String getTitulo() {
@@ -144,6 +159,17 @@ public class Texto {
         this.eliminado = valor;
     }
 
+    // Devuelve el número de mensajes asociado.
+    public Integer getNumMensajes(){
+        int numMensajes = 0;
+        for (Mensaje msg : mensajes){
+            if (msg.getTipo().equals(Mensaje.TipoMensaje.COMENTARIO)) {
+                numMensajes++;
+            }
+        }
+        return numMensajes;
+    }
+
     // Obtiene la categoría (categoría + subcategoría).
     public Categoria getCategoria() {
         return categoria;
@@ -153,6 +179,7 @@ public class Texto {
     public void setCategoria(Categoria categoria) {
         this.categoria = categoria;
     }
+
 
     public String getIdioma() {
         return idioma;
@@ -184,4 +211,37 @@ public class Texto {
         this.notasTexto = notasTexto;
     }
 
+    public Set<Etiqueta> getEtiquetas() { return etiquetas; }
+
+    public void setEtiquetas(Set<Etiqueta> etiquetas) {
+        this.etiquetas = etiquetas;
+    }
+
+    public void addEtiqueta(Etiqueta etiqueta) {
+        this.etiquetas.add(etiqueta);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        }
+
+        Texto texto = (Texto) obj;
+        if (this.idTexto != null && texto.idTexto != null) {
+            return this.idTexto.equals(texto.idTexto);
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        if (this.idTexto != null) {
+            return this.idTexto.hashCode();
+        }
+        return 0;
+    }
 }

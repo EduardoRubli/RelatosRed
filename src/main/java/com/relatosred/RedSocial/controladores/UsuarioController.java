@@ -1,13 +1,13 @@
 package com.relatosred.RedSocial.controladores;
 
+import com.relatosred.RedSocial.DTO.UsuarioMeDTO;
 import com.relatosred.RedSocial.entidades.Usuario;
 import com.relatosred.RedSocial.servicios.UsuarioService;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+// No confundir con Authentication de Apache.
+import org.springframework.security.core.Authentication;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,7 +35,24 @@ public class UsuarioController {
         return true;
     }
 
-    //Endpoint para crear un nuevo usuario.
+    // Obtener usuario actual.
+    @GetMapping("/usuario/me")
+    public ResponseEntity<UsuarioMeDTO> getUsuarioActual(Authentication authentication) {
+        String email = authentication.getName();
+        // Si no encuentra usuario propaga EntityNotFoundException.
+        Usuario usuario = usuarioService.obtenerUsuarioPorEmail(email);
+
+        // Aquí se guardan los datos del usuario actual.
+        return ResponseEntity.ok(new UsuarioMeDTO(usuario));
+    }
+
+    @GetMapping("/usuario/{idUsuario}/mostrar")
+    public ResponseEntity<Usuario> obtenerUsuarioPorId(@PathVariable @NotNull @Positive Long idUsuario) {
+        Usuario usuario = usuarioService.obtenerUsuarioPorId(idUsuario);
+        return ResponseEntity.ok(usuario);
+    }
+
+    // Crear nuevo usuario.
     @PostMapping("/usuario/crear")
     public ResponseEntity<Usuario> crearUsuario(@RequestParam(value = "nombre", required = true)
                                               @NotBlank(message = "El campo nombre es obligatorio.") String nombre,
@@ -122,7 +139,7 @@ public class UsuarioController {
     }
 
     @PutMapping("/usuario/{idUsuario}")
-    public ResponseEntity<String> eliminarUsuario(@PathVariable Long idUsuario) {
+    public ResponseEntity<String> eliminarUsuario(@PathVariable @NotNull @Positive Long idUsuario) {
             // Cambia el estado de eliminado a true.
             usuarioService.eliminarUsuario(idUsuario);
             return ResponseEntity.ok().body("Usuario eliminado con éxito.");

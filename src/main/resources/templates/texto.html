@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Relatosfera</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0; padding: 0;
+            background: #f7f7fa;
+        }
+        .header-container {
+            width: 100%;
+            background: #31426a;
+            color: #fff;
+            padding: 0.5em 0;
+        }
+        .header-inner {
+            max-width: 950px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 60px;
+            box-sizing: border-box;
+            padding: 0 2em;
+        }
+        .header-titulo {
+            font-size: 2.5em;
+            font-weight: 700;
+            letter-spacing: 1px;
+            margin: 0;
+            text-align: left;
+        }
+        .header-login {
+            /* Login y registro */
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            margin-top: 4px;
+            gap: 3px;
+        }
+        /* --- Inicio form-login --- */
+        .form-login-linea {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .form-login-linea input {
+            border: 1px solid #b6c9e8;
+            border-radius: 4px;
+            padding: 4px;
+            font-size: 0.9em;
+            background: #f6f8fc;
+            color: #222;
+            min-width: 100px;
+            max-width: 120px;   /* <-- Limita el ancho máximo */
+            width: 120px;
+        }
+        .form-login-linea input:focus {
+            outline: 2px solid #80b1ef;
+        }
+        .form-login-linea input[type="password"] {
+            max-width: 60px;
+            width: 60px;
+        }
+        .form-login-linea input[type="email"] {
+            max-width: 150px;
+            width: 150px;
+        }
+        .form-login-linea button {
+            background: #a7c6e7;
+            border: none;
+            color: #31426a;
+            font-weight: bold;
+            border-radius: 4px;
+            padding: 5px 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.18s, color 0.18s;
+        }
+        .form-login-linea button:hover {
+            background: #b9d6f5;
+            color: #13213e;
+        }
+        .login-links {
+            display: flex;
+            justify-content: flex-end;
+            /* Separación entre links */
+            gap: 2px;
+            /* padding ???*/
+        }
+        /* Estilo común para ambos enlaces */
+        .login-links a {
+            color: #fff;
+            font-size: 0.9em;
+            text-decoration: none !important;
+            padding: 2px 6px;
+            border-radius: 3px;
+            transition: color 0.15s, background 0.15s;
+            cursor: pointer;
+            line-height: 1.5;
+        }
+        .login-links a:hover {
+            color: #b6c9e8;
+            background: #233050;
+        }
+        @media (max-width: 700px) {
+            .header-login { align-items: stretch; }
+            .form-login-linea { flex-direction: column; align-items: stretch; }
+            .login-links { flex-direction: column; gap: 2px; align-items: flex-end; }
+            .login-links a { text-align: right; width: auto;}
+        }
+        /* --- Fin form-login --- */
+        @media(max-width: 990px){
+            .header-inner { max-width: 96vw; }
+        }
+        @media (max-width: 700px) {
+            .header-inner { flex-direction: column; gap: 10px; align-items: flex-start; }
+            .header-titulo { font-size: 1.3em; width: 100%; }
+            .header-login { width: 100%; justify-content: flex-end; }
+        }
+        /* --- Bloque de filtros --- */
+        #filtrosContainer {
+            width: 100%;
+            background: #dde3f2;
+            display: flex;
+            justify-content: center;
+            align-items: stretch;
+            gap: 24px;
+            padding: 1em 0;
+        }
+        .bloque-filtro {
+            background: #fff;
+            padding: 1em 1.5em;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            min-width: 300px;
+            height: 20px;
+        }
+        .bloque-filtro input,
+        .bloque-filtro select {
+            padding: 4px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+            font-size: 1em;
+        }
+        .bloque-filtro label {
+            font-weight: bold;
+        }
+        .bloque-filtro button {
+            background: #31426a; color: #fff;
+            font-weight: bold; border: none;
+            cursor: pointer;
+            border-radius: 4px;
+            padding: 7px 15px;
+            transition: background 0.2s;
+        }
+        .bloque-filtro button:hover { background: #222e46; }
+
+        /* RESULTADOS */
+        #resultadosContainer {
+            max-width: 950px;
+            margin: 2em auto 1em auto;
+            display: flex; flex-direction: column; gap: 20px;
+        }
+        .tarjeta-texto {
+            background: #fff;
+            box-shadow: 0 1px 6px rgba(49, 66, 106, 0.08);
+            border-radius: 8px;
+            padding: 1.2em 1.5em;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .texto-row {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+        .texto-categoria {
+            background: #e5eaff;
+            color: #31426a;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-weight: bold;
+            font-size: 0.95em;
+        }
+        .texto-titulo {
+            font-size: 1.2em; font-weight: bold;
+            margin-left: 0.5em;
+            flex: 2;
+        }
+        .texto-autor, .texto-fecha {
+            font-size: 0.98em;
+            color: #6a6f80;
+        }
+        .texto-fecha { margin-left: 1em; }
+        .texto-sinopsis {
+            margin-top: 0.5em;
+            color: #444a5c;
+            font-size: 1.05em;
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 4;
+            line-clamp: 4;
+            max-height: 5.3em;
+            text-overflow: ellipsis;
+        }
+        /* Pie */
+        footer {
+            text-align: center;
+            padding: 1em 0;
+            background: #31426a;
+            color: #fff;
+            font-size: 0.95em;
+            letter-spacing: 0.8px;
+            margin-top: 2em;
+        }
+        @media (max-width: 900px) {
+            #filtrosContainer { flex-direction: column; align-items: center; }
+            .bloque-filtro { width: 90%; min-width: unset; justify-content: flex-start; margin-bottom: 8px;}
+        }
+        @media (max-width: 700px) {
+            header, #filtrosContainer { flex-direction: column; align-items: stretch; }
+            .bloque-filtro, #filtrarCategoriaForm { flex-direction: column; align-items: flex-start; gap: 10px; width: 100%; box-sizing: border-box;}
+            .texto-row { flex-direction: column; gap: 6px; align-items: flex-start; }
+        }
+
+        /* ======= Contenedor detalle de texto ======= */
+        #detalleContainer { max-width: 950px; margin: 2em auto; background: #fff; border-radius: 8px; padding: 2em; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; flex-direction: column; gap: 1.5em; height: calc(100vh - 200px); overflow: hidden; position: relative; }
+        #detalleInner { overflow-y: auto; padding-right: 1em; }
+        .titulo-relato { font-size: 2em; font-weight: bold; margin: 0; color: #31426a; }
+        #tagsContainer { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag { background: #e5eaff; color: #31426a; padding: 4px 10px; border-radius: 12px; font-size: 0.9em; text-decoration: none; }
+        .meta-row { display: flex; gap: 20px; font-size: 0.95em; color: #6a6f80; }
+        .contenido-relato { margin-top: 1em; line-height: 1.6; color: #333; }
+
+        /* ======= Caja de comentarios ======= */
+        #comentariosContainer { position: absolute; bottom: 0; left: 0; width: 100%; background: #f1f3f8; padding: 1em; box-sizing: border-box; }
+        #comentarioForm textarea { width: 100%; height: 80px; border-radius: 4px; border: 1px solid #ccc; padding: 8px; resize: vertical; }
+        #comentarioForm button { margin-top: 8px; background: #31426a; color: #fff; border: none; border-radius: 4px; padding: 8px 12px; cursor: pointer; }
+        #comentarioForm button:hover { background: #222e46; }
+    </style>
+</head>
+<body>
+<header class="header-container">
+    <div class="header-inner">
+        <h1 class="header-titulo">Relatosfera</h1>
+        <div class="header-login">
+            <form class="form-login-linea" action="/index" method="post">
+                <input type="email" id="emailLogin" placeholder="Email" name="email" required>
+                <input type="password" id="passwordLogin" placeholder="Contraseña" name="password" required>
+                <button class="login-btn" id="loginBtn" type="submit">Login</button>
+            </form>
+            <div class="login-links">
+                <a href="registro.html" class="link-registro">Condiciones generales</a>
+                <a href="/registro" class="link-registro">Registrar usuario</a>
+                <a href="/logout" class="link-registro">Logout</a>
+            </div>
+        </div>
+    </div>
+</header>
+
+<section id="filtrosContainer">
+    <form id="filtrarCategoriaForm" class="bloque-filtro">
+        <select id="categoriaSelect" name="categoria">
+            <option value="">-- Categoría --</option>
+        </select>
+        <label for="criterioSelect">Orden:</label>
+        <select id="criterioSelect" name="criterio">
+            <option value="notaMedia">Nota Media</option>
+            <option value="fechaPublicacionD">Fecha Descendente</option>
+            <option value="fechaPublicacionA">Fecha Ascendente</option>
+        </select>
+        <button type="submit">Filtrar</button>
+    </form>
+    <form id="buscarTextosForm" class="bloque-filtro">
+        <input type="text" id="subcadenaTextos" name="subcadena" placeholder="Buscar por título o autor..." required>
+        <button type="submit">Buscar</button>
+        <button id="logoutBtn" type="button" style="display:none;">Logout</button>
+    </form>
+</section>
+
+<!-- Detalle del texto -->
+<main>
+    <div id="detalleContainer">
+        <div id="detalleInner">
+            <div id="tituloContainer"><h2 class="titulo-relato">Cargando...</h2></div>
+            <div id="tagsContainer"></div>
+            <div class="meta-row">
+                <div id="categoriaMeta"></div>
+                <div id="autorMeta"></div>
+                <div id="fechaMeta"></div>
+            </div>
+            <div id="contenidoContainer" class="contenido-relato"></div>
+        </div>
+        <div id="comentariosContainer">
+            <form id="comentarioForm">
+                <textarea id="comentarioText" placeholder="Escribe tu comentario..."></textarea>
+                <button type="submit">Enviar comentario</button>
+            </form>
+        </div>
+    </div>
+</main>
+
+<footer>
+    &copy; 2025 Red Social de Relatos. Todos los derechos reservados.
+</footer>
+
+<script>
+    const BASE_URL = 'http://localhost:8080';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Login/Logout toggle (igual que en index)
+        fetch(${BASE_URL}/usuario/me, { credentials: 'include', redirect: 'manual' })
+    .then(res => res.status === 200 ? mostrarLogout() : mostrarLogin())
+            .catch(() => mostrarLogin());
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            fetch(${BASE_URL}/logout, { method: 'POST', credentials: 'include' })
+                .then(() => window.location.reload());
+        });
+
+        // Obtener idTexto de la query string
+        const params = new URLSearchParams(window.location.search);
+        const idTexto = params.get('idTexto');
+        if (!idTexto) return alert('ID de texto no proporcionado');
+
+        // Cargar detalle del texto
+        fetch(${BASE_URL}/texto/${idTexto})
+    .then(res => res.json())
+            .then(texto => mostrarDetalle(texto))
+            .catch(() => alert('No se pudo cargar el texto'));
+
+        // Cargar etiquetas del texto
+        fetch(${BASE_URL}/texto/${idTexto}/etiquetas)
+            .then(res => res.json())
+            .then(data => mostrarTags(data))
+            .catch(() => {});
+
+        // Cargar categorías en el filtro
+        fetch(${BASE_URL}/categorias/subcategorias)
+    .then(r => r.json())
+            .then(d => {
+                d.categorias.forEach(cat => {
+                    const opt = document.createElement('option'); opt.value = cat; opt.textContent = cat;
+                    document.getElementById('categoriaSelect').appendChild(opt);
+                });
+            });
+
+        // Envío de comentarios (placeholder)
+        document.getElementById('comentarioForm').addEventListener('submit', e => {
+            e.preventDefault();
+            const text = document.getElementById('comentarioText').value.trim();
+            if (!text) return;
+            // Aquí insertar lógica de POST a /mensaje
+            alert('Comentario enviado: ' + text);
+            document.getElementById('comentarioText').value = '';
+        });
+    });
+
+    function mostrarDetalle(texto) {
+        document.querySelector('#tituloContainer .titulo-relato').textContent = texto.titulo;
+        document.getElementById('categoriaMeta').textContent = texto.categoria.categoria;
+        document.getElementById('autorMeta').textContent = texto.autor.alias || ${texto.autor.nombre} ${texto.autor.apellido};
+        document.getElementById('fechaMeta').textContent = new Date(texto.fechaPublicacion).toLocaleDateString('es-ES');
+        document.getElementById('contenidoContainer').textContent = texto.contenido;
+    }
+
+    function mostrarTags(etiquetas) {
+        const cont = document.getElementById('tagsContainer'); cont.innerHTML = '';
+        etiquetas.forEach(tag => {
+            const a = document.createElement('a'); a.href = #; a.textContent = tag.nombre; a.className = 'tag';
+            cont.appendChild(a);
+        });
+    }
+
+    function mostrarLogout() {
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('logoutBtn').style.display = '';
+    }
+    function mostrarLogin() {
+        document.getElementById('loginForm').style.display = '';
+        document.getElementById('logoutBtn').style.display = 'none';
+    }
+
+    // ---- PETICIONES Y EVENTOS ----
+
+    // Buscar textos por subcadena
+    document.getElementById('buscarTextosForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const subcadena = document.getElementById('subcadenaTextos').value.trim();
+        fetch(${BASE_URL}/textos?subcadena=${encodeURIComponent(subcadena)})
+            .then(resp => resp.json())
+            .then(mostrarResultados)
+            .catch(err => alert('No se encontraron coincidencias.'));
+        this.reset();
+    });
+
+    // Filtrar por categoría y criterio
+    document.getElementById('filtrarCategoriaForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const categoria = document.getElementById('categoriaSelect').value.trim();
+        const criterio = document.getElementById('criterioSelect').value;
+        if (!categoria) return alert('Selecciona una categoría');
+
+        const params = new URLSearchParams({ categoria });
+        if (criterio) params.append('criterio', criterio);
+
+        fetch(${BASE_URL}/textos?${params.toString()})
+            .then(resp => resp.json())
+            .then(mostrarResultados)
+            .catch(err => alert('No se pudo filtrar textos.'));
+    });
+
+    // Cargar categorías dinámicamente
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cargar categorías
+        fetch(${BASE_URL}/categorias/subcategorias)
+    .then(resp => resp.json())
+            .then(data => {
+                const categorias = data.categorias || [];
+                const select = document.getElementById('categoriaSelect');
+                categorias.forEach(cat => {
+                    const option = document.createElement('option');
+                    option.value = cat;
+                    option.textContent = cat;
+                    select.appendChild(option);
+                });
+            })
+            .catch(err => { /* Nada, deja el select vacío */ });
+        // Cargar textos por defecto (p.ej., más recientes)
+        fetch(${BASE_URL}/textos?criterio=fechaPublicacionD)
+            .then(resp => resp.json())
+            .then(mostrarResultados);
+    });
+</script>
+</body>
+</html>

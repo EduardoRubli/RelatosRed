@@ -1,20 +1,23 @@
 package com.relatosred.RedSocial.controladores;
 
 import com.relatosred.RedSocial.entidades.Categoria;
+import com.relatosred.RedSocial.entidades.Etiqueta;
 import com.relatosred.RedSocial.entidades.Texto;
 import com.relatosred.RedSocial.entidades.Usuario;
 import com.relatosred.RedSocial.servicios.TextoService;
 import com.relatosred.RedSocial.servicios.UsuarioService;
 import com.relatosred.RedSocial.servicios.CategoriaService;
+import com.relatosred.RedSocial.servicios.EtiquetaService;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.util.*;
 
 @RestController
 @Validated
@@ -24,13 +27,16 @@ public class TextoController {
     private TextoService textoService;
     private UsuarioService usuarioService;
     private CategoriaService categoriaService;
+    private EtiquetaService etiquetaService;
 
     // Usamos el constructor para inyectar dependencias.
     public TextoController(TextoService textoService, UsuarioService usuarioService,
-                           CategoriaService categoriaService, SpringValidatorAdapter springValidatorAdapter) {
+                           CategoriaService categoriaService, SpringValidatorAdapter springValidatorAdapter,
+                           EtiquetaService etiquetaService) {
         this.textoService = textoService;
         this.usuarioService = usuarioService;
         this.categoriaService = categoriaService;
+        this.etiquetaService = etiquetaService;
         this.springValidatorAdapter = springValidatorAdapter;
     }
 
@@ -42,10 +48,81 @@ public class TextoController {
         return true;
     }
 
-    // Endpoint para crear un texto.
-    @PostMapping("/texto/crear")
+    @GetMapping("/categorias/subcategorias")
+    public ResponseEntity<Map<String, List<String>>> listarCategoriasYSubcategorias() {
+        // Crear un objeto temporal de Categoria para acceder a los métodos
+        Categoria categoria = new Categoria();
+        // Obtenemos listas de categorías y subcategorías.
+        List<String> listaCategorias = categoria.listarCategorias();
+        List<String> listaSubcategorias = categoria.listarSubcategorias();
+
+        // Creamos un disccionario para almacenar valores.
+        Map<String, List<String>> diccionario = new HashMap<>();
+
+        diccionario.put("categorias", listaCategorias);
+        diccionario.put("subcategorias", listaSubcategorias);
+
+        return ResponseEntity.ok(diccionario);
+    }
+
+    @GetMapping("/usuario/{idUsuario}/textos")
+    public ResponseEntity<List<Texto>> listarTextosPorUsuario(
+            @PathVariable @NotNull @Positive Long idUsuario) {
+        List<Texto> textos = textoService.listarTextosPorUsuario(idUsuario);
+        return ResponseEntity.ok(textos);
+    }
+
+    @GetMapping("/texto/{idTexto}/etiquetas")
+    public ResponseEntity<Set<Etiqueta>> listarEtiquetas(@PathVariable @NotNull @Positive Long idTexto) {
+        Texto texto = textoService.obtenerTextoPorId(idTexto);
+        Set<Etiqueta> etiquetas = etiquetaService.listarEtiquetas(texto);
+        return ResponseEntity.ok(etiquetas);
+    }
+
+    // Obtener texto por id.
+    @GetMapping("/texto/{idTexto}")
+    // Solo usamos @NotNull y @Positive en parámetros obligatorios.
+    public ResponseEntity<Texto> obtenerTextoPorId(@PathVariable @NotNull @Positive Long idTexto) {
+        Texto texto = textoService.obtenerTextoPorId(idTexto);
+        return ResponseEntity.ok(texto);
+    }
+
+    // Convertimos el string de etiquetas, si existe, en etiquetas.
+    private void procesarEtiquetas(String etiquetas, Texto texto) {
+        String[] etiquetasArr = etiquetas.split(",");
+
+        for (String nombreEtiqueta : etiquetasArr) {
+            Etiqueta etiqueta = new Etiqueta(nombreEtiqueta.trim());
+            Etiqueta etiquetaCreada = etiquetaService.crearEtiqueta(etiqueta, texto);
+
+            if (etiquetaCreada != null) {
+                // Texto se asocia a Etiqueta en CrearEtiqueta.
+                texto.addEtiqueta(etiquetaCreada);
+            }
+        }
+    }
+
+    @PutMapping("/etiqueta/{idEtiqueta}/prohibir")
+    public ResponseEntity<String> prohibirEtiqueta(@PathVariable @NotNull @Positive Long idEtiqueta) {
+        Etiqueta etiqueta = etiquetaService.obtenerEtiquetaPorId(idEtiqueta);
+        etiquetaService.prohibirEtiqueta(etiqueta);
+        return ResponseEntity.ok("Etiqueta prohibida correctamente.");
+    }
+
+    // Desvincula etiqueta de texto.
+    @PutMapping("/texto/{idTexto}/etiqueta/{idEtiqueta}/desvincular")
+    public ResponseEntity<String> desvincularEtiqueta(@PathVariable @NotNull @Positive Long idTexto,
+                                                   @PathVariable @NotNull @Positive Long idEtiqueta) {
+        Texto texto = textoService.obtenerTextoPorId(idTexto);
+        Etiqueta etiqueta = etiquetaService.obtenerEtiquetaPorId(idEtiqueta);
+        etiquetaService.desvincularEtiqueta(etiqueta, texto);
+        return ResponseEntity.ok().body("Etiqueta eliminada con éxito.");
+    }
+
+    // Endpoint para crear texto.
+    @PostMapping("/texto")
     public ResponseEntity<Texto> crearTexto(@RequestParam(value = "idAutor", required = true)
-                                            @NotNull(message = "El campo autor es obligatorio.") Long idAutor,
+                                        @NotNull @Positive(message = "El campo autor es obligatorio.") Long idAutor,
                                         @RequestParam(value = "titulo", required = true)
                                             @NotBlank(message = "El campo título es obligatorio.") String titulo,
                                         @RequestParam(value = "contenido", required = true)
@@ -54,6 +131,7 @@ public class TextoController {
                                             @NotBlank(message = "El campo estado es obligatorio.") String estadoStr,
                                         @RequestParam(value = "categoria", required = false) String categoria,
                                         @RequestParam(value = "subcategoria", required = false) String subcategoria,
+                                        @RequestParam(value = "etiquetas", required = false) String etiquetaStr,
                                         @RequestParam(value = "idioma", required = false) String idioma,
                                         @RequestParam(value = "sinopsis", required = false) String sinopsis) {
 
@@ -100,48 +178,63 @@ public class TextoController {
             texto.setIdioma(idioma);
         }
 
+        // Si existen etiquetas las procesamos.
+        if (validarCampo(etiquetaStr)) {
+            procesarEtiquetas(etiquetaStr, texto);
+        }
+
         // Delegamos la creación a TextoService.
         Texto textoCreado = textoService.crearTexto(texto);
+
         return ResponseEntity.status(HttpStatus.CREATED).body(textoCreado);
     }
 
-    @GetMapping("/textos/filtrar")
-    public ResponseEntity<List<Texto>> filtrarTextos(@RequestParam(required = false)
-                                               String criterio) {
-        List<Texto> textos = textoService.filtrarTextos(criterio);
-        // Si no hay resultados se devuelve una lista vacía.
+    // Filtrado de textos.
+    @GetMapping("/textos")
+    public ResponseEntity<List<Texto>> filtrarTextos(
+            @RequestParam(required = false) String criterio,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String subCategoria,
+            @RequestParam(required = false) String subcadena) {
+
+        List<Texto> textos;
+
+        if (subcadena != null && !subcadena.isBlank()) {
+            textos = textoService.buscarTextos(subcadena);
+
+        } else if (categoria != null && subCategoria != null
+                    && !categoria.isBlank() && !subCategoria.isBlank()) {
+            textos = textoService.filtrarPorCategoriaYSubcategoria(categoria, subCategoria);
+
+        } else if ((categoria != null && !categoria.isBlank()) &&
+            (criterio != null && !criterio.isBlank())) {
+            textos = textoService.filtrarPorCategoriaYCriterio(categoria, criterio);
+
+        } else if (categoria != null && !categoria.isBlank()) {
+            textos = textoService.filtrarPorCategoria(categoria);
+
+        }  else {
+            // criterio puede ser null (servicio).
+            textos = textoService.filtrarTextos(criterio);
+        }
+
         return ResponseEntity.ok(textos);
-
     }
 
-    @GetMapping("/textos/filtrarCat")
-    public ResponseEntity<List<Texto>> filtrarPorCategoria(@RequestParam(value = "categoria", required = true)
-                                                       String categoria) {
-        List<Texto> textos = textoService.filtrarPorCategoria(categoria);
-        return ResponseEntity.ok(textos);
-    }
-
-    @GetMapping("/textos/buscar")
-    public ResponseEntity<List<Texto>> buscarTextos(
-            @RequestParam(required = true) String subcadena) {
-            List<Texto> textos = textoService.buscarTextos(subcadena);
-            // En REST una búsqueda vacía no es un error.
-            return ResponseEntity.ok(textos);
-    }
-
-    // Endpoint para actualizar un texto.
-    @PutMapping("/texto/actualizar")
+    // Actualizar texto.
+    @PutMapping("/texto/{idTexto}")
     public ResponseEntity<Texto> actualizarTexto(@RequestParam(value = "idTexto", required = true)
-                                                 @NotNull(message = "El campo idTexto es obligatorio.") Long idTexto,
+                                               @NotNull @Positive(message = "El campo idTexto es obligatorio.") Long idTexto,
                                                @RequestParam(value = "titulo", required = false) String titulo,
                                                @RequestParam(value = "estado", required = false) String estado,
                                                @RequestParam(value = "categoria", required = false) String categoria,
                                                @RequestParam(value = "subcategoria", required = false) String subcategoria,
+                                                 @RequestParam(value = "etiquetas", required = false) String etiquetaStr,
                                                @RequestParam(value = "idioma", required = false) String idioma,
                                                @RequestParam(value = "sinopsis", required = false) String sinopsis,
                                                @RequestParam(value = "contenido", required = false) String contenido) {
             // Recuperamos el texto existente.
-            Texto texto = textoService.obtenerTextoPorId(idTexto);
+            Texto textoExistente = textoService.obtenerTextoPorId(idTexto);
             Categoria categoriaObj = null;
 
             if (validarCampo(categoria) && validarCampo(subcategoria)) {
@@ -163,39 +256,52 @@ public class TextoController {
 
             // Actualizamos los campos si se han pasado valores.
             if (validarCampo(titulo)) {
-                texto.setTitulo(titulo);
+                textoExistente.setTitulo(titulo);
             }
             if (validarCampo(estado)) {
                 Texto.EstadoTexto nuevoEstado =
                         Texto.EstadoTexto.valueOf(estado.toUpperCase());
 
                 // Si el estado es publicado no se admite cambio.
-                if (texto.getEstado() != Texto.EstadoTexto.PUBLICADO &&
-                texto.getEstado() != Texto.EstadoTexto.OCULTO) {
-                    texto.setEstado(nuevoEstado);
+                if (textoExistente.getEstado() != Texto.EstadoTexto.PUBLICADO &&
+                        textoExistente.getEstado() != Texto.EstadoTexto.OCULTO) {
+                    textoExistente.setEstado(nuevoEstado);
                 }
             }
             // Controlamos categoriaObj.
             if (categoriaObj != null) {
-                texto.setCategoria(categoriaObj);
+                textoExistente.setCategoria(categoriaObj);
             }
+            if (validarCampo(etiquetaStr)) {
+                // Obtenemos etiquetas antiguas asociadas al texto.
+                Set<Etiqueta> etiquetasAntiguas = textoExistente.getEtiquetas();
+                // Comparamos con las etiquetas nuevas y obtenemos eliminadas.
+                Set<Etiqueta> eliminadas = etiquetaService.compararEtiquetas(etiquetaStr, etiquetasAntiguas);
+
+                for (Etiqueta eliminada : eliminadas) {
+                    etiquetaService.desvincularEtiqueta(eliminada, textoExistente);
+                }
+                // Finalmente añadimos las nuevas etiquetas.
+                procesarEtiquetas(etiquetaStr, textoExistente);
+            }
+
             if (validarCampo(idioma)) {
-                texto.setIdioma(idioma);
+                textoExistente.setIdioma(idioma);
             }
             if (validarCampo(sinopsis)) {
-                texto.setSinopsis(sinopsis);
+                textoExistente.setSinopsis(sinopsis);
             }
             if (validarCampo(contenido)) {
-                texto.setContenido(contenido);
+                textoExistente.setContenido(contenido);
             }
 
             // Delegamos la actualización a TextoService.
-            Texto textoActualizado = textoService.actualizarTexto(texto);
+            Texto textoActualizado = textoService.actualizarTexto(textoExistente);
             return ResponseEntity.ok(textoActualizado);
     }
 
-    @PutMapping("/texto/{idTexto}") // El eliminado blando usa PUT.
-    public ResponseEntity<String> eliminarTexto(@PathVariable Long idTexto) {
+    @PutMapping("/texto/{idTexto}/eliminar") // El eliminado blando usa PUT.
+    public ResponseEntity<String> eliminarTexto(@PathVariable @Positive Long idTexto) {
             // Cambia el estado de eliminado a true.
             textoService.eliminarTexto(idTexto);
             return ResponseEntity.ok().body("Texto eliminado con éxito.");

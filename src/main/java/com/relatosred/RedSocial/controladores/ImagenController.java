@@ -3,6 +3,7 @@ package com.relatosred.RedSocial.controladores;
 import com.relatosred.RedSocial.entidades.Imagen;
 import com.relatosred.RedSocial.entidades.Usuario;
 import com.relatosred.RedSocial.servicios.ImagenService;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -22,13 +23,13 @@ public class ImagenController {
         this.imagenService = imagenService;
     }
 
-    @PostMapping("/subir")
+    @PostMapping("/subir") // No implementado.
     public ResponseEntity<Imagen> subirImagen(@RequestParam("archivo") MultipartFile archivo,
                                               @RequestParam("descripcion") String descripcion,
                                               @RequestParam("tipo") String tipo,
-                                              @RequestParam("usuarioId") Long usuarioId) {
+                                              @RequestParam("usuarioId") @Positive Long usuarioId) {
         try {
-            // Convertir MultipartFile a File
+            // Convierte MultipartFile a File.
             File tempFile = File.createTempFile("imagen", null);
             archivo.transferTo(tempFile);
 

@@ -3,8 +3,11 @@ package com.relatosred.RedSocial.servicios;
 
 import com.relatosred.RedSocial.entidades.Categoria;
 import com.relatosred.RedSocial.entidades.Texto;
+import com.relatosred.RedSocial.entidades.Usuario;
 import com.relatosred.RedSocial.repositorios.CategoriaRepository;
 import com.relatosred.RedSocial.repositorios.TextoRepository;
+import com.relatosred.RedSocial.repositorios.UsuarioRepository;
+import com.relatosred.RedSocial.servicios.EtiquetaService;
 import com.relatosred.RedSocial.utilidades.HashUtil;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -12,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,13 +23,20 @@ import java.util.Optional;
 public class TextoService {
 
     private TextoRepository textoRepository;
+    private UsuarioRepository usuarioRepository;
     private CategoriaRepository categoriaRepository;
+    private EtiquetaService etiquetaService;
     private HashUtil hashUtil;
 
     // Se usa constructor en lugar de @Autowired.
-    public TextoService(TextoRepository textoRepository, CategoriaRepository categoriaRepository) {
+    public TextoService(TextoRepository textoRepository,
+                        CategoriaRepository categoriaRepository,
+                        UsuarioRepository usuarioRepository,
+                        EtiquetaService etiquetaService) {
         this.textoRepository = textoRepository;
         this.categoriaRepository = categoriaRepository;
+        this.etiquetaService = etiquetaService;
+        this.usuarioRepository = usuarioRepository;
         this.hashUtil = new HashUtil();
     }
 
@@ -44,16 +55,23 @@ public class TextoService {
         return textoOpt.get();
     }
 
+    // Control interno de textos duplicados por hash.
     public String normalizarTexto(String texto) {
-        if (texto == null) {
-            return null;
-        }
-        // Convertir a minúsculas.
+        if (texto == null) { return null;}
+
+        // 1) se convierte el texto a minúsculas.
         String normalizado = texto.toLowerCase();
 
-        // Elimina espacios en blanco y caracteres de puntuación.
-        normalizado = normalizado.replaceAll("[\\s,.;\\-_–—()\\[\\]{}]+", "");
-
+        // 2) Se eliminan los caracteres extraños y tildes.
+        normalizado = normalizado.replaceAll("[^a-záàäâéèëêíìïîóòöôúùüûñç]", " ").trim()
+                .replaceAll("[áàäâ]", "a")
+                .replaceAll("[éèëê]", "e")
+                .replaceAll("[íìïî]", "i")
+                .replaceAll("[óòöô]", "o")
+                .replaceAll("[úùüû]", "u")
+                .replaceAll("ñ", "n")
+                .replaceAll("ç", "c")
+                .replaceAll("\\s+", " ");
         return normalizado;
     }
 
@@ -74,6 +92,13 @@ public class TextoService {
             throw new DataIntegrityViolationException("Ya existe un texto con ese contenido.");
         }
         return textoGuardado;
+    }
+
+    public List<Texto> listarTextosPorUsuario(Long idUsuario) {
+        Usuario autor = usuarioRepository.findById(idUsuario)
+                .orElseThrow(() -> new EntityNotFoundException("Usuario no encontrado"));
+
+            return textoRepository.findByAutor(autor);
     }
 
     // Obtiene textos por título parcial o autor.
@@ -98,6 +123,38 @@ public class TextoService {
         List<Texto> listaResultados = new ArrayList<>();
         listaResultados.addAll(textoRepository.filtrarPorCriterio(criterio));
 
+        return listaResultados.stream().distinct().toList();
+    }
+
+    // Filtra textos por categoría.
+    public List<Texto> filtrarPorCategoriaYCriterio(String categoria, String criterio) {
+        if (categoria == null || categoria.isBlank()) {
+            throw new IllegalArgumentException("La categoría no puede estar vacía.");
+        }
+
+        // Validación de subcategoría.
+        Categoria.CategoriaEnum categoriaEnum;
+        try {
+            categoriaEnum = Categoria.CategoriaEnum.valueOf(categoria.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new EntityNotFoundException("Categoría '" + categoria + "' no válida.");
+        }
+
+        String criterioArg = criterio;
+
+        if (criterio.equalsIgnoreCase("fechaPublicacionD")) {
+            criterioArg = "fechaPublicacion";
+        } else if (criterio.equalsIgnoreCase("fechaPublicacionA")) {
+            criterioArg = "fechaPublicacion";
+        }
+
+        List<Texto> listaResultados = new ArrayList<>();
+        listaResultados.addAll(textoRepository.filtrarPorCategoriaYCriterio(categoriaEnum, criterioArg));
+
+        // Si el criterio es fechaPublicacionA, invierte la lista.
+        if ("fechaPublicacionA".equalsIgnoreCase(criterio)) {
+            Collections.reverse(listaResultados);
+        }
         return listaResultados.stream().distinct().toList();
     }
 
@@ -157,7 +214,6 @@ public class TextoService {
         Texto textoActualizado = null;
 
         if (existeTextoPorId(texto.getIdTexto())) {
-            
                 // Obtenemos nuevo hash SHA-256 para el contenido.
                 String textoNormalizado = normalizarTexto(texto.getContenido());
                 String nuevoHash = hashUtil.calcularSHA256(textoNormalizado);

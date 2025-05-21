@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     // Devuelve usuario con email dado.
-    Usuario findByEmailIgnoreCase(String email);
+    Optional<Usuario> findByEmailIgnoreCase(String email);
     //Usuario findByIdUsuario(Long idUsuario);
     Optional<Usuario> findById(Long id);
     // Verifica si existe usuario con email.

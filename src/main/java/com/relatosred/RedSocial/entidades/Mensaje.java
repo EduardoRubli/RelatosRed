@@ -14,7 +14,6 @@ public class Mensaje {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idMensaje;
 
-    @JsonIgnore
     @ManyToOne // Usuario que envía el mensaje.
     @JoinColumn(name = "idEmisor", nullable = false)
     private Usuario emisor;
@@ -41,16 +40,42 @@ public class Mensaje {
 
     // Contenido del mensaje.
     @Lob
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String contenido;
 
-    // Fecha y hora en que se envía el mensaje.
+    @Column(nullable = false)
     private LocalDateTime fechaEnvio;
 
-    // Tipos: "comentario", "resComentario", "privado", "resPrivado".
-    private String tipo;
+    @Enumerated(EnumType.STRING)
+    @Column(length = 16, nullable = false)
+    private Mensaje.TipoMensaje tipo;
+    // Estructura para tipo.
+    public enum TipoMensaje {
+        COMENTARIO, RESCOMENTARIO, PRIVADO, RESPRIVADO
+    }
 
-    // Título para el comentario raíz.
+    @Column(nullable = false)
+    private Boolean eliminado;
+
+    // Título para comentario raíz.
+    @Column(length = 100, nullable = false)
     private String titulo;
+
+    // constructor vacío.
+    public Mensaje() {}
+
+    public Mensaje(Usuario emisor, Texto texto, Mensaje padre, Usuario receptor, String contenido, String titulo, TipoMensaje tipo) {
+        this.emisor = emisor;
+        this.texto = texto;
+        this.padre = padre;
+        this.receptor = receptor;
+        this.contenido = contenido;
+        this.titulo = titulo;
+        this.tipo = tipo;
+        this.fechaEnvio = LocalDateTime.now();
+        this.eliminado = false;
+    }
+
 
     // Getters y Setters.
 
@@ -110,12 +135,20 @@ public class Mensaje {
         this.fechaEnvio = fechaEnvio;
     }
 
-    public String getTipo() {
+    public TipoMensaje getTipo() {
         return tipo;
     }
 
-    public void setTipo(String tipo) {
+    public void setTipo(TipoMensaje tipo) {
         this.tipo = tipo;
+    }
+
+    public Boolean getEliminado() {
+        return eliminado;
+    }
+
+    public void setEliminado(Boolean eliminado) {
+        this.eliminado = eliminado;
     }
 
     public String getTitulo() {

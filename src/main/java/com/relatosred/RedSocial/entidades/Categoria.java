@@ -2,6 +2,9 @@ package com.relatosred.RedSocial.entidades;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "Categoria",
         uniqueConstraints = { @UniqueConstraint(columnNames = {"categoria", "subcategoria"}) },
@@ -12,7 +15,7 @@ public class Categoria {
     private Long idCategoria;
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 16, nullable = false)
+    @Column(length = 12, nullable = false)
     private CategoriaEnum categoria;
 
     public enum CategoriaEnum {
@@ -24,12 +27,11 @@ public class Categoria {
         HISTORICO,
         AVENTURA,
         FANFIC,
-        EROTICO,
         BIOGRAFIA;
     }
 
     @Enumerated(EnumType.STRING)
-    @Column(length = 16)
+    @Column(length = 12)
     private SubcategoriaEnum subcategoria;
 
     public enum SubcategoriaEnum {
@@ -85,5 +87,23 @@ public class Categoria {
 
     public void setSubcategoria(SubcategoriaEnum subcategoria) {
         this.subcategoria = subcategoria;
+    }
+
+    public List<String> listarCategorias() {
+        List<String> listaCategorias = new ArrayList<>();
+        // Recorre CategoriaEnum y devuelve sus valores.
+        for (CategoriaEnum cat : CategoriaEnum.values()) {
+            listaCategorias.add(cat.toString());
+        }
+        return listaCategorias;
+    }
+
+    public List<String> listarSubcategorias(){
+        List<String> listaSubcategorias = new ArrayList<>();
+        // Recorre SubcategoriaEnum y devuelve sus valores.
+        for (SubcategoriaEnum subCat : SubcategoriaEnum.values()){
+            listaSubcategorias.add(subCat.toString());
+        }
+        return listaSubcategorias;
     }
 }

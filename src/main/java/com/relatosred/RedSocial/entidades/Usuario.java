@@ -28,7 +28,7 @@ public class Usuario {
     private LocalDateTime fechaReg;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(name = "rol", nullable = false)
     private RolUsuario rol;
 
     public enum RolUsuario {
