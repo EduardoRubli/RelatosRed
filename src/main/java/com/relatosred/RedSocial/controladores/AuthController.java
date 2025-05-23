@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class AuthController {
 
-    @GetMapping({"/index", "/"})
+  @GetMapping({"/index", "/"})
     // Renderiza index.html.
     public String index() {
         return "index";
@@ -17,18 +17,6 @@ public class AuthController {
     // Renderiza registro.html.
     public String registro() {
         return "registro";
-    }
-
-    @GetMapping("/texto")
-    // Renderiza relato.
-    public String texto() {
-        return "texto";
-    }
-
-    @GetMapping("/usuario")
-    // Renderiza perfil de usuario.
-    public String usuario() {
-        return "usuario";
     }
 
     @PreAuthorize("hasAuthority('ADMIN')")
