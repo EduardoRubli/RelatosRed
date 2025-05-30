@@ -2,15 +2,19 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Estilos personalizados -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="css/estilos.css">
   <title>Relatosfera</title>
-
 </head>
 <body>
+<div class="contenedor-principal">
 <header class="header-container">
   <div class="header-inner">
-    <h1 class="header-titulo">Relatosfera</h1>
+    <h1 class="header-titulo">
+      <a href="/index" class="header-link">Relatosfera</a>
+    </h1>
     <div class="header-login" id="headerLogin">
       <!-- El login se cargará aquí -->
     </div>
@@ -41,14 +45,19 @@
 </main>
 
 <footer>
-  &copy; 2025 Red Social de Relatos. Todos los derechos reservados.
+  &copy; 2025 Relatosfera.
 </footer>
-
+</div>
 <script>
   const BASE_URL = 'http://localhost:8080';
 
   let idTextoActual = null;
   let usuarioActual = null;
+  // Flag para control de instancias.
+  let instanciaActual  = 'resultados';
+  let instanciaAnterior = null;
+  // ID de usuario del último perfil.
+  let ultimoPerfilVisitado = null;
 
   // Obtenemos usuario actual.
   function obtenerUsuarioActual() {
@@ -61,13 +70,29 @@
             });
   }
 
+  function capitalizar(str) {
+    return str.replace(/\b\w/g, c => c.toUpperCase());
+  }
+
+  function procesarCategoria(categoria){
+    categoria = capitalizar(categoria.toLowerCase());
+    if (categoria === 'Cienciafic') categoria = 'Ciencia Ficción';
+
+    return categoria;
+  }
+
   function cargarLogin() {
     const headerLogin = document.getElementById('headerLogin');
     if (!headerLogin) return;
 
+    var saludo = 'Bienvenido';
+    if (usuarioActual && usuarioActual.sexo === 'femenino') {
+      saludo = 'Bienvenida';
+    }
+
     if (usuarioActual) {
       headerLogin.innerHTML = `
-      <span class="bienvenida">Bienvenid@, ${usuarioActual.alias}</span>
+      <span class="bienvenida">${saludo}, ${capitalizar(usuarioActual.alias)}</span>
       <div class="login-links">
         <b><a href="#" class="link-registro">Condiciones generales</a>
         <a href="/logout" class="link-registro" style="color: #f16161">Logout</a></b>
@@ -82,7 +107,7 @@
       <div class="login-links">
         <a href="#" class="link-registro">Condiciones generales</a>
         <a href="/registro" class="link-registro">Registrar usuario</a>
-        <a href="#" class="link-registro">Contacto</a>
+        <a href="/index" class="link-registro">Inicio</a>
       </div>
       `;
     }
@@ -101,10 +126,17 @@
   }
 
   function volver() {
-    if (typeof idTextoActual === "undefined" || !idTextoActual) {
-      window.location.href = "/index";
+
+    if (instanciaActual === 'texto' && instanciaAnterior === 'perfil' && ultimoPerfilVisitado) {
+      cargarPerfilUsuario(ultimoPerfilVisitado)
+    } else if (instanciaActual === 'texto') {
+      volverALista()
     } else {
-      cargarDetalleTexto(idTextoActual)
+      if (typeof idTextoActual === "undefined" || !idTextoActual) {
+        window.location.href = "/index";
+      } else {
+        cargarDetalleTexto(idTextoActual)
+      }
     }
   }
 
@@ -234,6 +266,23 @@
             });
   }
 
+  async function guardarTexto(idTexto) {
+    try {
+      // Comprueba que el PDF está disponible
+      const head = await fetch(`/texto/${idTexto}/pdf`, {
+        method: 'HEAD',
+        credentials: 'include'
+      });
+      if (!head.ok) throw new Error(`Código ${head.status}`);
+
+      // Lanza la descarga en nueva pestaña
+      window.open(`/texto/${idTexto}/pdf`, '_blank');
+    } catch (e) {
+      console.error('Error al descargar PDF:', e);
+      alert('No se pudo descargar el PDF: ' + e.message);
+    }
+  }
+
   function inyectarMenuUsuario(usuarioActual, texto){
     if (!usuarioActual) return '';
 
@@ -268,8 +317,27 @@
   `;
   }
 
+  function volverALista() {
+    // Restauramos estado anterior.
+    [ listaTextos, listaTextosAnterior ] = [ listaTextosAnterior, listaTextos ];
+    [ paginaActual, paginaAnterior ] = [ paginaAnterior, paginaActual ];
+
+    // Reconstruimos la vista.
+    initPaginacion(listaTextos);
+  }
+
   function mostrarDetalleTexto(texto) {
-    // Lo primero obtenemos idTexto actual.
+    // Seteamos flags.
+    instanciaAnterior = instanciaActual;
+    instanciaActual  = 'texto';
+
+    // Elimina la paginación si estaba ahí.
+    const pag = document.getElementById('paginacion')
+    if (pag) pag.remove()
+
+    listaTextosAnterior = [...listaTextos];
+    paginaAnterior = paginaActual;
+    // Obtenemos idTexto actual.
     idTextoActual = texto.idTexto;
 
     const categoria = texto.categoria?.categoria ?? 'Sin categoría';
@@ -278,8 +346,32 @@
             ? `${categoria} > ${subcategoria}`
             : categoria;
     const fecha = formatearFecha(texto.fechaPublicacion);
-    // Puedes mejorar este renderizado según tus necesidades de estilos
+
     const container = document.getElementById('resultadosContainer');
+
+    let cajaComentario = '';
+    if (usuarioActual) {
+      cajaComentario = `
+    <div class="comentario-barra-outer">
+      <div class="comentario-barra-inner">
+        <textarea
+          id="inputComentario"
+          placeholder="Escribe un comentario..."
+          rows="2"
+          maxlength="300"
+          class="comentario-textarea"></textarea>
+        <div class="comentario-opciones">
+          <label class="comentario-check-label">
+            <button id="enviarComentarioBtn" class="comentario-boton">Enviar</button>
+            <input type="checkbox" id="notificarRespuesta" />
+            Notificarme cuando haya respuestas.
+          </label>
+        </div>
+      </div>
+    </div>
+  `;
+    }
+
     container.innerHTML = `
         ${inyectarMenuUsuario(usuarioActual, texto)}
         <div class="detalle-relato-cabecera">
@@ -301,13 +393,16 @@
                 </div>
             </form>
             <div class="detalle-relato-nota-container">
+                 <button class="btn-volver" onclick="volver()">
+                    <i class="fas fa-arrow-left"></i>
+                 </button>
                 <span class="detalle-relato-nota">${texto.notaMedia?.toFixed(1) || 's/n'}</span>
             </div>
         </div>
         </div>
         <div class="detalle-relato-meta">
             <div class="meta-izq">
-                <strong>Categoria: </strong>${categoriaCompleta}
+                <strong>Categoria: </strong>${procesarCategoria(categoria)}
             </div>
             <div class="meta-centro">
                 <strong>Autor: </strong>
@@ -323,33 +418,17 @@
             ${texto.contenido.replace(/\n/g, '<br>')}
         </div>
         <br>
-        <div class="comentario-barra-outer">
-        <div class="comentario-barra-inner">
-            <textarea
-            id="inputComentario"
-            placeholder="Escribe un comentario..."
-            rows="2"
-            maxlength="300"
-            class="comentario-textarea">
-            </textarea>
-            <div class="comentario-opciones">
-            <label class="comentario-check-label">
-                <button id="enviarComentarioBtn" class="comentario-boton">Enviar</button>
-                <input type="checkbox" id="notificarRespuesta" />
-                Notificarme cuando haya respuestas.
-            </label>
-
-            </div>
-        </div>
-        </div>
+        ${cajaComentario}
         <div class="comentariosContainer" id="comentariosContainer"></div>
     `;
     // Configuramos eventos para puntuación.
     configurarPuntuacion(texto.idTexto);
+    // Evita error si no hay usuario logueado.
+    const btnEnviar = document.getElementById('enviarComentarioBtn')
     // En el evento onClick enviamos mensaje.
-    document.getElementById('enviarComentarioBtn').onclick = function() {
-      enviarComentario(texto.idTexto);
-    };
+    if (btnEnviar) {
+      btnEnviar.onclick = () => enviarComentario(texto.idTexto)
+    }
 
     fetch(`/texto/${texto.idTexto}/comentarios`)
             .then(resp => {
@@ -359,7 +438,7 @@
               return resp.json();
             })
             .then(mostrarComentarios)
-            .catch(error => mostrarErrorComentarios("No se pudieron cargar los comentaios."));
+            .catch(error => mostrarErrorComentarios("No se pudieron cargar los comentarios."));
   }
 
   function eliminarComentario(idMensaje) {
@@ -378,9 +457,11 @@
     const contenedor = document.getElementById('comentariosContainer');
     contenedor.innerHTML = '';
 
-    if (!Array.isArray(comentarios) || comentarios.length === 0) {
-      contenedor.innerHTML = '<div style="color:#888; text-align:center; ' +
-              'padding:1em;">Sin comentarios por ahora.</div>';
+    if (usuarioActual && (!Array.isArray(comentarios) || comentarios.length === 0)) {
+      contenedor.innerHTML = '<div class="sin-comentariosLog"">Sin comentarios por ahora.</div>';
+      return;
+    } else if (!Array.isArray(comentarios) || comentarios.length === 0) {
+      contenedor.innerHTML = '<div class="sin-comentarios">Sin comentarios por ahora.</div>';
       return;
     }
 
@@ -404,8 +485,8 @@
       <div class="comentario-titulo">${mensaje.titulo || '(Sin título)'}</div>
       <div class="comentario-meta">
         <span class="comentario-autor">
-          <a href="/usuario?idUsuario=${mensaje.emisor?.idUsuario || ''}">
-            ${mensaje.emisor?.alias || 'Usuario'}
+          <a href="#" onclick="cargarPerfilUsuario(${mensaje.emisor?.idUsuario})">
+            ${`${mensaje.emisor?.nombre || ''} ${mensaje.emisor?.apellido || ''}`.trim() || 'Usuario'}
           </a>
         </span>
         <span class="comentario-fecha">${fecha}</span>
@@ -413,16 +494,18 @@
       <div class="comentario-mensaje">
         ${mensaje.contenido}
       </div>
-      <div class="comentario-acciones">
-        <button class="btn-responder" disabled>Responder</button>
-        ${
-          puedeEliminar
-            ? `<button class="btnEliminarComentario" data-id="${mensaje.idMensaje}">
-                Eliminar</button>`
-            : ''
-        }
-      </div>
-    `;
+      ${usuarioActual ? `
+        <div class="comentario-acciones">
+            <button class="btn-responder" disabled>Responder</button>
+            ${
+              puedeEliminar
+                      ? `<button class="btnEliminarComentario" data-id="${mensaje.idMensaje}">
+              Eliminar</button>`
+                      : ''
+            }
+        </div>
+        ` : ''}
+      `;
       contenedor.appendChild(comentarioDiv);
     });
 
@@ -437,7 +520,7 @@
     });
   }
 
-  // --- Vista principal ---
+  // --- PRINCIPAL ---
   // Obtener autor.
   const cacheAutores = {};
   async function obtenerNombreAutor(idAutor) {
@@ -462,19 +545,130 @@
     return fecha.toLocaleDateString('es-ES', opciones);
   }
 
-  // Mostrar resultados bonitos en tarjetas
-  async function mostrarResultados(textos) {
+  // --- PAGINACIÓN ---
+  let listaTextos = []
+  const itemsPorPagina = 6
+  let paginaActual = 1
+  // Lista de textos guardada.
+  let listaTextosAnterior = []
+  let paginaAnterior = 1
+
+  // Llama a mostrarResultados().
+  function initPaginacion(textos) {
+    // Seteamos flags.
+    instanciaAnterior = instanciaActual;
+    instanciaActual  = 'resultados';
+
+    listaTextos = textos
+    const totalPaginas = Math.ceil(textos.length / itemsPorPagina)
+    renderPagControls(totalPaginas)
+    mostrarResultados(textos, paginaActual)
+  }
+
+  // Crea los botones de paginación.
+  function renderPagControls(totalPaginas) {
+    // Si no hay resultados.
+    if (totalPaginas <= 1) {
+      // Elimina paginación si existe.
+      const viejo = document.getElementById('paginacion');
+      if (viejo) viejo.remove();
+      return; // Sale de la función.
+    }
+
+    const pagContainer = document.createElement('div')
+    pagContainer.id = 'paginacion'
+
+    const anterior = document.createElement('button')
+    anterior.textContent = '« Anterior'
+    anterior.disabled = paginaActual === 1
+    anterior.onclick = () => cambiarPagina(paginaActual - 1)
+    pagContainer.appendChild(anterior)
+
+    // Lógica para mostrar botones.
+    const mostrarBoton = (i) => {
+      const btn = document.createElement('button');
+      btn.textContent = i;
+      btn.disabled = i === paginaActual;
+      btn.onclick = () => cambiarPagina(i);
+      pagContainer.appendChild(btn);
+    };
+
+    // Rango a mostrar.
+    let rango = 2;
+    // Muestra la primera página.
+    mostrarBoton(1);
+
+    // Elipsis si hay hueco entre rango e inicio.
+    if (paginaActual - rango > 2) {
+      const elipsis = document.createElement('span');
+      elipsis.textContent = ' ... ';
+      pagContainer.appendChild(elipsis);
+    }
+
+    // Páginas cercanas a la actual.
+    for (let i = Math.max(2, paginaActual - rango); i <= Math.min(totalPaginas - 1,
+            paginaActual + rango); i++) {
+      mostrarBoton(i);
+    }
+
+    // Elipsis si hay hueco entre rango y final.
+    if (paginaActual + rango < totalPaginas - 1) {
+      const elipsis = document.createElement('span');
+      elipsis.textContent = ' ... ';
+      pagContainer.appendChild(elipsis);
+    }
+
+    // Siempre muestra la última página.
+    if (totalPaginas > 1) {
+      mostrarBoton(totalPaginas);
+    }
+
+    const siguiente = document.createElement('button')
+    siguiente.textContent = 'Siguiente »'
+    siguiente.disabled = paginaActual === totalPaginas
+    siguiente.onclick = () => cambiarPagina(paginaActual + 1)
+    pagContainer.appendChild(siguiente)
+
+    const main = document.querySelector('main')
+    const viejo = document.getElementById('paginacion')
+    if (viejo) viejo.replaceWith(pagContainer)
+    else main.appendChild(pagContainer)
+  }
+
+  function cambiarPagina(nueva) {
+    paginaActual = nueva
+    // 'listaTextos` es el array original.
+    mostrarResultados(listaTextos, paginaActual)
+    renderPagControls(Math.ceil(listaTextos.length / itemsPorPagina))
+  }
+
+  // Mostrar lista de textos en tarjetas.
+  async function mostrarResultados(textos, pagina = 1) {
+    const inicio = (pagina - 1) * itemsPorPagina
+    const fin    = inicio + itemsPorPagina
+    const subconjunto = textos.slice(inicio, fin)
+
     const contenedor = document.getElementById('resultadosContainer');
     contenedor.innerHTML = '';
 
     if (!Array.isArray(textos) || textos.length === 0) {
-      contenedor.innerHTML = '<div style="padding:1em; color:#666;">' +
-              'No hay textos para mostrar.</div>';
+      contenedor.innerHTML = `
+        <div class="sin-resultados">
+            <i class="fas fa-book-open"></i>
+            <p>No se encontraron resultados.</p>
+         </div>
+        `;
       return;
     }
 
+    // --- Div separador superior ---
+    const separador = document.createElement('div');
+    separador.style.height = '1em';
+    separador.style.backgroundColor = '#f2eded';
+    contenedor.appendChild(separador);
+
     // Carga asíncrona de autores por cada texto.
-    for (const texto of textos) {
+    for (const texto of subconjunto) {
       const div = document.createElement('div');
       div.classList.add('tarjeta-texto');
 
@@ -507,9 +701,14 @@
       const tituloLink = document.createElement('a');
       tituloLink.textContent = texto.titulo || '(Sin título)';
       // Ojo a este enlace.
-      tituloLink.href = `index?idTexto=${texto.idTexto}`;
-      tituloLink.className = 'titulo-relato';
-      spanTitulo.appendChild(tituloLink);
+      tituloLink.href = '#'
+      tituloLink.className = 'titulo-relato'
+// al hacer click, previenes el salto de página y cargas el detalle
+      tituloLink.addEventListener('click', function(e) {
+        e.preventDefault()
+        cargarDetalleTexto(texto.idTexto)
+      })
+      spanTitulo.appendChild(tituloLink)
 
       const spanAutor = document.createElement('span');
       spanAutor.className = 'texto-autor';
@@ -537,7 +736,6 @@
       contenedor.appendChild(div);
     }
   }
-  // --- Fin de vista principal ---
 
   // --- PETICIONES Y EVENTOS ---
   // Buscar textos por subcadena
@@ -546,7 +744,7 @@
     const subcadena = document.getElementById('subcadenaTextos').value.trim();
     fetch(`${BASE_URL}/textos?subcadena=${encodeURIComponent(subcadena)}`)
             .then(resp => resp.json())
-            .then(mostrarResultados)
+            .then(initPaginacion)
             .catch(err => alert('No se encontraron coincidencias.'));
     this.reset();
   });
@@ -563,7 +761,7 @@
 
     fetch(`${BASE_URL}/textos?${params.toString()}`)
             .then(resp => resp.json())
-            .then(mostrarResultados)
+            .then(initPaginacion)
             .catch(err => alert('No se pudo filtrar textos.'));
   });
 
@@ -585,7 +783,8 @@
               // Cargar todas las subcategorías al inicio
               subcategoriaSelect.innerHTML = '<option value="">Ninguna</option>';
               data.subcategorias.forEach(sub => {
-                const subcat = sub.split('_')[1]; // Asume formato "CATEGORIA_SUBCATEGORIA"
+                // Asume formato "CATEGORIA_SUBCATEGORIA".
+                const subcat = sub.split('_')[1];
                 const option = document.createElement('option');
                 option.value = subcat;
                 option.textContent = subcat;
@@ -597,10 +796,18 @@
 
   // Construir formulario para crear texto.
   function mostrarFormularioCreacion() {
+    // Seteamos flags.
+    instanciaAnterior = instanciaActual;
+    instanciaActual   = 'formulario';
+
+    document.getElementById('filtrosContainer').style.display = 'none';
     const container = document.getElementById('resultadosContainer');
     container.style.background = '#f2eded';
     container.innerHTML = `
     <div class="form-header">
+        <button class="btn-volver-form" onclick="volver()">
+            <i class="fas fa-arrow-left"></i>
+        </button>
         <i class="fas fa-plus-circle"></i> Crear Nuevo Texto
     </div>
     <div class="form-crear-container">
@@ -648,7 +855,7 @@
           </div>
 
           <div class="form-group">
-            <label>Subcategoría (opcional):</label>
+            <label>Subcategoría:</label>
             <select id="subcategoria" name="subcategoria">
                 <option value="OPCIONAL">Ninguna</option>
                 <option value="CRIMEN">Crimen</option>
@@ -728,6 +935,11 @@
 
   // Construir formulario para editar texto.
   function mostrarFormularioEdicion(idTexto) {
+    // Seteamos flags.
+    instanciaAnterior = instanciaActual;
+    instanciaActual   = 'formulario';
+
+    document.getElementById('filtrosContainer').style.display = 'none';
     fetch(`${BASE_URL}/texto/${idTexto}`)
             .then(response => response.json())
             .then(texto => {
@@ -749,6 +961,9 @@
 
               container.innerHTML = `
                 <div class="form-header">
+                    <button class="btn-volver-form" onclick="volver()">
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
                     <i class="fas fa-edit"></i> Editar Texto
                 </div>
                 <div class="form-crear-container">
@@ -793,7 +1008,6 @@
                                         <option value="HISTORICO" ${texto.categoria?.categoria === 'HISTORICO' ? 'selected' : ''}>Histórico</option>
                                         <option value="AVENTURA" ${texto.categoria?.categoria === 'AVENTURA' ? 'selected' : ''}>Aventura</option>
                                         <option value="FANFIC" ${texto.categoria?.categoria === 'FANFIC' ? 'selected' : ''}>Fanfic</option>
-                                        <option value="BIOGRAFIA" ${texto.categoria?.categoria === 'BIOGRAFIA' ? 'selected' : ''}>Biografía</option>
                                     </select>
                                 </div>
 
@@ -951,17 +1165,28 @@
   }
 
   // Cargar el perfil de usuarioActual.
-  function mostrarPerfilUsuario(usuario) {
+  async function mostrarPerfilUsuario(usuario) {
+    // Seteamos flags.
+    instanciaAnterior = instanciaActual;
+    instanciaActual  = 'perfil';
+    ultimoPerfilVisitado = usuario.idUsuario;
+
+    // Ocultamos sistema de filtros.
+    document.getElementById('filtrosContainer').style.display = 'none';
+
     const container = document.getElementById('resultadosContainer');
     container.style.background = '#f2eded';
     // Plantilla perfil.
     container.innerHTML = `
         <div class="form-header">
-            <i class="fas fa-user"></i> Perfil de usuario
+            <button class="btn-volver-form" onclick="volver()">
+                <i class="fas fa-arrow-left"></i>
+            </button>
+            <i class="fas fa-user"></i>Perfil de usuario
+            <div id="btnSeguirContainer"></div>
         </div>
         <div class="form-crear-container">
-            <div class="perfil-columnas">
-                <!-- Columna izquierda - Info usuario y contactos -->
+            <div class="perfil-wrapper">
                 <div class="columna-izq">
                     <div class="info-usuario">
                         <div class="contacto-avatar grande">
@@ -970,18 +1195,21 @@
                               : `<i class="fas fa-user"></i>`
                             }
                         </div>
-                        <div class="contacto-info">
-                            <h3>${usuario.nombre} ${usuario.apellido}</h3>
+                        <div class="perfil-info">
+                            <span>${usuario.nombre} ${usuario.apellido}</span>
                             <div class="detalle-email">${usuario.email}</div>
                         </div>
                     </div>
-                    <h3 class="titulo-seccion">Contactos (<span id="numContactos">0</span>)</h3>
+                    <div class="contactos-wrapper">
+                    <h3 class="titulo-seccion">
+                        Seguidos (<span id="numContactos">0</span>):
+                    </h3>
                     <div class="lista-contactos" id="listaContactos"></div>
+                    </div>
                 </div>
 
-                <!-- Columna derecha - Textos del usuario -->
                 <div class="columna-der">
-                    <h3 class="titulo-seccion">Textos (<span id="numTextos">0</span>)</h3>
+                    <h3 class="titulo-seccion">Relatos (<span id="numTextos">0</span>):</h3>
                     <div class="lista-textos" id="listaTextos"></div>
                 </div>
             </div>
@@ -989,16 +1217,67 @@
         // Cargar datos
         cargarContactos(usuario);
         cargarTextosUsuario(usuario);
+
+        // Si no hay sesión o es tu propio perfil, no metemos botón
+        if (!usuarioActual || usuarioActual.idUsuario === usuario.idUsuario) {
+          return;
+        }
+
+        // 3) Montar botón Seguir / Dejar de seguir
+        await montarBotonSeguir(usuario.idUsuario);
+  }
+
+  async function montarBotonSeguir(idSeguido) {
+    const contenedor = document.getElementById('btnSeguirContainer');
+    contenedor.innerHTML = ''; // Limpia contenedor.
+
+    let seguidos;
+    try {
+      const resp = await fetch(`${BASE_URL}/siguiendo?idUsuario=${usuarioActual.idUsuario}`);
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      seguidos = await resp.json();
+    } catch (e) {
+      console.error('Error comprobando seguidos', e);
+      return;
+    }
+
+    const yaSeguido = seguidos.some(u => u.idUsuario === idSeguido);
+    const btn = document.createElement('button');
+    btn.id = 'btnSeguir';
+    btn.textContent = yaSeguido ? 'Dejar de seguir' : 'Seguir';
+    btn.className = yaSeguido ? 'btnSeguir' : 'btnSeguir';
+
+    btn.onclick = async () => {
+      try {
+        const url = yaSeguido
+                ? `${BASE_URL}/dejarDeSeguir?idSeguidor=${usuarioActual.idUsuario}&idSeguido=${idSeguido}`
+                : `${BASE_URL}/seguir?idSeguidor=${usuarioActual.idUsuario}&idSeguido=${idSeguido}`;
+        const method = yaSeguido ? 'DELETE' : 'POST';
+
+        const resp = await fetch(url, { method });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+        // Vuelve a cargar todo el perfil (actualiza lista y botón)
+        cargarPerfilUsuario(idSeguido);
+      } catch (err) {
+        alert(`Error al ${yaSeguido ? 'dejar de seguir' : 'seguir'}: ${err.message}`);
+      }
+    };
+
+    contenedor.appendChild(btn);
   }
 
   function cargarContactos(usuario) {
-    fetch(`${BASE_URL}/contactos?idUsuario=${usuario.idUsuario}`)
-            .then(resp => resp.json())
-            .then(contactos => {
-              mostrarContactos(contactos);
-              document.getElementById('numContactos').textContent = contactos.length || 0;
-            })
-            .catch(error => mostrarError('Error cargando contactos: ' + error.message));
+    fetch(`${BASE_URL}/siguiendo?idUsuario=${usuario.idUsuario}`)
+      .then(resp => {
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        return resp.json();
+      })
+      .then(contactos => {
+        mostrarContactos(contactos);
+        document.getElementById('numContactos').textContent = contactos.length;
+      })
+      .catch(error => mostrarError('Error cargando contactos: ' + error.message));
   }
 
   // Mostrar contactos de usuarioActual.
@@ -1086,7 +1365,7 @@
     // Cargar textos por defecto.
     fetch(`${BASE_URL}/textos?criterio=fechaPublicacionD`)
             .then(resp => resp.json())
-            .then(mostrarResultados);
+            .then(initPaginacion);
   }
 </script>
 </body>

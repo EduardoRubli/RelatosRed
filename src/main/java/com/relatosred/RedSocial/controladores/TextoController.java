@@ -11,8 +11,8 @@ import com.relatosred.RedSocial.servicios.EtiquetaService;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.validation.beanvalidation.SpringValidatorAdapter;
 import org.springframework.web.bind.annotation.*;
@@ -46,6 +46,22 @@ public class TextoController {
             return false;
         }
         return true;
+    }
+
+    @GetMapping("/texto/{idTexto}/pdf")
+    public ResponseEntity<byte[]> descargarPdf(@PathVariable Long idTexto) throws Exception {
+        byte[] pdf = textoService.generarPdf(idTexto);
+        Texto texto = textoService.obtenerTextoPorId(idTexto);
+        // Obtenemos título del relato.
+        String titulo = texto.getTitulo();
+        // Sustituímos espacios por guiones.
+        titulo = titulo.trim().replace(" ", "-");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDisposition(
+                ContentDisposition.builder("attachment")
+                        .filename(titulo + ".pdf").build());
+        return new ResponseEntity<>(pdf, headers, HttpStatus.OK);
     }
 
     @GetMapping("/categorias/subcategorias")

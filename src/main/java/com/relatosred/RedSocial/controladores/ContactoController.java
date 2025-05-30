@@ -3,8 +3,7 @@ package com.relatosred.RedSocial.controladores;
 import com.relatosred.RedSocial.entidades.Contacto;
 import com.relatosred.RedSocial.entidades.Usuario;
 import com.relatosred.RedSocial.servicios.ContactoService;
-import jakarta.persistence.EntityNotFoundException;
-import jakarta.validation.constraints.NotNull;
+import com.relatosred.RedSocial.servicios.UsuarioService;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,48 +22,61 @@ public class ContactoController {
         this.contactoService = contactoService;
     }
 
-    // Solicitar contacto.
-    @PostMapping("/contacto")
-    public ResponseEntity<Contacto> agregarContacto(
-                                    @RequestParam @NotNull @Positive Long idUsuario1,
-                                    @RequestParam @NotNull @Positive Long idUsuario2) {
-        Contacto contacto = contactoService.agregarContacto(idUsuario1, idUsuario2);
+    // Seguir a un usuario.
+    @PostMapping("/seguir")
+    public ResponseEntity<Contacto> seguir(
+            @RequestParam @Positive Long idSeguidor,
+            @RequestParam @Positive Long idSeguido) {
+
+        Contacto contacto = contactoService.seguir(idSeguidor, idSeguido);
         return ResponseEntity.status(HttpStatus.CREATED).body(contacto);
     }
 
-    // Listar contactos.
-    @GetMapping("/contactos")
-    public ResponseEntity<List<Usuario>> listarContactos(
-                                        @RequestParam @NotNull @Positive Long idUsuario,
-                                        @RequestParam(defaultValue = "ACEPTADO") String estado) {
-        List<Usuario> usuarios = contactoService.listarContactos(idUsuario, estado);
-        return ResponseEntity.ok(usuarios);
+    // Dejar de seguir a usuario.
+    @DeleteMapping("/dejarDeSeguir")
+    public ResponseEntity<Void> dejarDeSeguir(
+            @RequestParam @Positive Long idSeguidor,
+            @RequestParam @Positive Long idSeguido) {
+
+        contactoService.dejarDeSeguir(idSeguidor, idSeguido);
+        return ResponseEntity.noContent().build();
     }
 
-    // Aceptar contacto.
-    @PutMapping("/contacto/aceptar")
-    public ResponseEntity<String> aceptarContacto(
-                                  @RequestParam @NotNull @Positive Long idUsuario1,
-                                  @RequestParam @NotNull @Positive Long idUsuario2) {
-        contactoService.aceptarContacto(idUsuario1, idUsuario2);
-        return ResponseEntity.ok("Contacto aceptado correctamente.");
+    // Bloquear a un usuario.
+    @PutMapping("/bloquear")
+    public ResponseEntity<Contacto> bloquear(
+            @RequestParam @Positive Long idBloqueador,
+            @RequestParam @Positive Long idBloqueado) {
+
+        Contacto contacto = contactoService.bloquearUsuario(idBloqueador, idBloqueado);
+        return ResponseEntity.ok(contacto);
     }
 
-    // Eliminar contacto.
-    @PutMapping("/contacto/eliminar")
-    public ResponseEntity<String> eliminarContacto(
-                                  @RequestParam @NotNull @Positive Long idUsuario1,
-                                  @RequestParam @NotNull @Positive Long idUsuario2) {
-        contactoService.eliminarContacto(idUsuario1, idUsuario2);
-        return ResponseEntity.ok("Contacto eliminado o rechazado.");
+    // Desbloquear contacto.
+    @PutMapping("/desbloquear")
+    public ResponseEntity<Void> desbloquear(
+            @RequestParam @Positive Long IdBloqueador,
+            @RequestParam @Positive Long idBloqueado) {
+
+        contactoService.desbloquearUsuario(IdBloqueador, idBloqueado);
+        return ResponseEntity.noContent().build();
     }
 
-    // Bloquear contacto.
-    @PutMapping("/contacto/bloquear")
-    public ResponseEntity<Usuario> bloquearContacto(
-                                   @RequestParam @NotNull @Positive Long idUsuario1,
-                                   @RequestParam @NotNull @Positive Long idUsuario2) {
-        Usuario bloqueado = contactoService.bloquearContacto(idUsuario1, idUsuario2);
-        return ResponseEntity.ok(bloqueado);
+    // Listar usuarios seguidos.
+    @GetMapping("/siguiendo")
+    public ResponseEntity<List<Usuario>> listarSeguidos(
+            @RequestParam @Positive Long idUsuario) {
+
+        List<Usuario> lista = contactoService.listarSeguidos(idUsuario);
+        return ResponseEntity.ok(lista);
+    }
+
+     // Listar seguidores.
+    @GetMapping("/seguidores")
+    public ResponseEntity<List<Usuario>> listarSeguidores(
+            @RequestParam @Positive Long idUsuario) {
+
+        List<Usuario> lista = contactoService.listarSeguidores(idUsuario);
+        return ResponseEntity.ok(lista);
     }
 }

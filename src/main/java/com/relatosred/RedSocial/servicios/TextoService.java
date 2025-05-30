@@ -8,12 +8,15 @@ import com.relatosred.RedSocial.repositorios.CategoriaRepository;
 import com.relatosred.RedSocial.repositorios.TextoRepository;
 import com.relatosred.RedSocial.repositorios.UsuarioRepository;
 import com.relatosred.RedSocial.servicios.EtiquetaService;
+import com.relatosred.RedSocial.utilidades.GeneradorPDF;
 import com.relatosred.RedSocial.utilidades.HashUtil;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -53,6 +56,19 @@ public class TextoService {
             throw new EntityNotFoundException("Texto no encontrado.");
         }
         return textoOpt.get();
+    }
+
+    public byte[] generarPdf(Long idTexto) throws Exception {
+        Texto texto = textoRepository.findById(idTexto)
+                .orElseThrow(() -> new EntityNotFoundException("Relato no encontrado"));
+
+        String titulo = texto.getTitulo();
+        String nombre = texto.getAutor().getNombre() + " " + texto.getAutor().getApellido();
+        LocalDateTime fechaDateTime = texto.getFechaPublicacion();
+        LocalDate fecha = fechaDateTime.toLocalDate();
+        String contenido = texto.getContenido();
+
+        return GeneradorPDF.crearDesdeTexto(titulo, nombre, fecha, contenido);
     }
 
     // Control interno de textos duplicados por hash.

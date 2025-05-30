@@ -5,33 +5,28 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "Contacto", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"idUsuario1", "idUsuario2"})
+        @UniqueConstraint(columnNames = {"idSeguidor", "idSeguido"})
 })
 public class Contacto {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idContacto;
 
-    @ManyToOne
-    @JoinColumn(name = "idUsuario1", nullable = false)
-    private Usuario usuario1;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "idSeguidor", nullable = false)
+    private Usuario seguidor;
 
-    @ManyToOne
-    @JoinColumn(name = "idUsuario2", nullable = false)
-    private Usuario usuario2;
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "idSeguido", nullable = false)
+    private Usuario seguido;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 12)
-    private EstadoContacto estado;
-
-    public enum EstadoContacto {
-        PENDIENTE,
-        ACEPTADO,
-        RECHAZADO,
-        BLOQUEADO
-    }
-
+    @Column(nullable = false)
+    private boolean bloqueado = false;
+    // Se debe inicializar en el servicio.
     private LocalDateTime fechaContacto;
+
+    // Constructor vacío.
+    public Contacto() {}
 
     // Getters y Setters.
     public Long getIdContacto() {
@@ -42,29 +37,21 @@ public class Contacto {
         this.idContacto = idContacto;
     }
 
-    public Usuario getUsuario1() {
-        return usuario1;
+    public Usuario getSeguidor() { return seguidor; }
+
+    public void setSeguidor(Usuario seguidor) {
+        this.seguidor= seguidor;
     }
 
-    public void setUsuario1(Usuario usuario1) {
-        this.usuario1 = usuario1;
+    public Usuario getSeguido() { return seguido; }
+
+    public void setSeguido(Usuario seguido) {
+        this.seguido = seguido;
     }
 
-    public Usuario getUsuario2() {
-        return usuario2;
-    }
+    public boolean getBloqueado() { return bloqueado; }
 
-    public void setUsuario2(Usuario usuario2) {
-        this.usuario2 = usuario2;
-    }
-
-    public EstadoContacto getEstado() {
-        return estado;
-    }
-
-    public void setEstado(EstadoContacto estado) {
-        this.estado = estado;
-    }
+    public void setBloqueado(boolean bloqueado) { this.bloqueado = bloqueado; }
 
     public LocalDateTime getFechaContacto() {
         return fechaContacto;

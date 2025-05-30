@@ -4,262 +4,43 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registro de Usuario</title>
+    <!-- Estilos personalizados -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background: #f7f7fa;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .header-container {
-            width: 100%;
-            background: #31426a;
-            color: #fff;
-            padding: 0.5em 0;
-        }
-        .header-inner {
-            max-width: 950px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            min-height: 60px;
-            box-sizing: border-box;
-            padding: 0 2em;
-        }
-        .header-titulo {
-            font-size: 2.5em;
-            font-weight: 700;
-            letter-spacing: 1px;
-            margin: 0;
-            text-align: left;
-        }
-        .header-login {
-            /* --- Login y registro --- */
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
-            margin-top: 4px;
-            gap: 3px;
-        }
-        /* --- Inicio form-login --- */
-        .form-login-linea {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .form-login-linea input {
-            border: 1px solid #b6c9e8;
-            border-radius: 4px;
-            padding: 4px;
-            font-size: 0.9em;
-            background: #f6f8fc;
-            color: #222;
-            min-width: 100px;
-            max-width: 120px;
-            width: 120px;
-        }
-        .form-login-linea input:focus {
-            outline: 2px solid #80b1ef;
-        }
-        .form-login-linea input[type="password"] {
-            max-width: 60px;
-            width: 60px;
-        }
-        .form-login-linea input[type="email"] {
-            max-width: 150px;
-            width: 150px;
-        }
-        .form-login-linea button {
-            background: #a7c6e7; /* Azul claro */
-            border: none;
-            color: #31426a;
-            font-weight: bold;
-            border-radius: 4px;
-            padding: 5px 8px;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: background 0.18s, color 0.18s;
-        }
-        .form-login-linea button:hover {
-            background: #b9d6f5;
-            color: #13213e;
-        }
-        .login-links {
-            display: flex;
-            justify-content: flex-end;
-            /* Separación entre links */
-            gap: 2px;
-        }
-        /* Estilo enlaces */
-        .login-links a {
-            color: #fff;
-            font-size: 0.9em;
-            text-decoration: none !important;
-            padding: 2px 6px;
-            border-radius: 3px;
-            transition: color 0.15s, background 0.15s;
-            cursor: pointer;
-            line-height: 1.5;
-        }
-        .login-links a:hover {
-            color: #b6c9e8;
-            background: #233050;
-        }
-        @media (max-width: 700px) {
-            .header-login { align-items: stretch; }
-            .form-login-linea { flex-direction: column; align-items: stretch; }
-            .login-links { flex-direction: column; gap: 2px; align-items: flex-end; }
-            .login-links a { text-align: right; width: auto;}
-        }
-        /* Contenedor principal */
-        .registro-outer-container {
-            max-width: 950px;
-            width: 100%;
-            margin: 0 auto;
-            background: #f2eded;
-            padding: 20px 0;
-        }
-        .registro-container {
-            max-width: calc(950px - 90px);
-            width: 100%;
-            margin: 45px auto;
-            padding: 45px;
-            background: #dde3f2;
-            border-radius: 8px;
-            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
-            box-sizing: border-box;
-        }
-        /* Contenedor interno para mejor control */
-        .registro-inner-wrapper {
-            max-width: 500px;
-            margin: 0 auto;
-        }
-        .registro-container h1 {
-            color: #31426a;
-            font-size: 2.1em;
-            font-weight: 700;
-            margin-bottom: 1.5em;
-            text-align: center;
-            letter-spacing: 0.5px;
-        }
-        .form-group {
-            margin-bottom: 1.5em;
-            width: 100%;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5em;
-            font-weight: bold;
-            color: #444;
-            font-size: 0.95em;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 0.8em;
-            border: 1px solid #d1d1d1;
-            border-radius: 4px;
-            font-size: 1em;
-            box-sizing: border-box;
-            background: #f8f9fa;
-        }
-        .form-group input:focus {
-            outline: 2px solid #80b1ef;
-            border-color: transparent;
-        }
-        /* Estilo para el botón - igual que en crear texto */
-        .btn-submit {
-            background: #31426a;
-            color: white;
-            padding: 1em 2em;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 1.1em;
-            width: 100%;
-            transition: background 0.3s;
-            font-weight: bold;
-            margin-top: 1em;
-        }
-
-        .btn-submit:hover {
-            background: #233050;
-        }
-        /* Mensaje de error - estilo mejorado */
-        .error-message {
-            color: #c02222;
-            text-align: center;
-            margin-top: 1.5em;
-            min-height: 22px;
-            font-size: 0.95em;
-            font-weight: bold;
-            padding: 0.8em;
-            background: rgba(255, 0, 0, 0.05);
-            border-radius: 4px;
-        }
-        /* Diseño responsive */
-        @media (max-width: 768px) {
-            .registro-container {
-                padding: 30px;
-                max-width: calc(100% - 60px);
-            }
-
-            .registro-inner-wrapper {
-                max-width: 100%;
-            }
-        }
-        @media (max-width: 480px) {
-            .registro-container {
-                padding: 20px;
-                max-width: calc(100% - 40px);
-            }
-
-            .registro-container h1 {
-                font-size: 1.8em;
-                margin-bottom: 1em;
-            }
-        }
-        /* --- Pie --- */
-        footer {
-            text-align: center;
-            padding: 1em 0;
-            background: #31426a;
-            color: #fff;
-            font-size: 0.95em;
-            letter-spacing: 0.8px;
-            margin-top: 0em;
-            width: 100%;
-        }
-    </style>
+    <link rel="stylesheet" href="css/estilos.css">
 </head>
+
 <body>
-<header class="header-container">
-    <div class="header-inner">
-        <h1 class="header-titulo">Relatosfera</h1>
-        <div class="header-login">
+<div class="contenedor-principal">
+    <header class="header-container">
+        <div class="header-inner">
+            <h1 class="header-titulo">
+                <a href="/index" class="header-link">Relatosfera</a>
+            </h1>
+        <div class="header-login" id="headerLogin">
             <form class="form-login-linea" action="/index" method="post">
                 <input type="email" id="emailLogin" placeholder="Email" name="email" required>
                 <input type="password" id="passwordLogin" placeholder="Contraseña" name="password" required>
                 <button class="login-btn" id="loginBtn" type="submit">Login</button>
             </form>
             <div class="login-links">
-                <a href="registro.html" class="link-registro">Condiciones generales</a>
+                <a href="#" class="link-registro">Condiciones generales</a>
                 <a href="/registro" class="link-registro">Registrar usuario</a>
-                <a href="/logout" class="link-registro">Logout</a>
+                <a href="#" class="link-registro">Contacto</a>
             </div>
         </div>
     </div>
 </header>
-<div class="registro-outer-container">
-<div class="registro-container">
-    <div class="registro-inner-wrapper">
-        <h1><i class="fas fa-user-plus"></i> Registro de usuario</h1>
-        <form id="formUsuario">
+
+<div class="form-header">
+    <button class="btn-volver-form" onclick="window.location.href='/'">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+    <i class="fas fa-user-plus"></i> Registro de usuario
+  </div>
+  
+  <div class="form-reg-container">
+    <div class="form-inner-wrapper">
+      <form id="formUsuario">
             <div class="form-group">
                 <label for="nombre">Nombre</label>
                 <input type="text" id="nombre" name="nombre" required>
@@ -286,13 +67,13 @@
             </div>
             <button type="submit" class="btn-submit">Registrar</button>
         </form>
-        <div id="error-message" class="error-message"></div>
+        <div id="error-reg" class="error-reg"></div>
     </div>
+  </div>
+  <footer>
+    &copy; 2025 Relatosfera.
+  </footer>
 </div>
-</div>
-<footer>
-    &copy; 2025 Red Social de Relatos. Todos los derechos reservados.
-</footer>
 <script>
     document.getElementById('formUsuario').addEventListener('submit', function(event) {
         event.preventDefault();
@@ -310,12 +91,12 @@
                     setTimeout(() => { window.location.href = "/"; }, 1400);
                 } else {
                     response.text().then(text => {
-                        document.getElementById('error-message').innerText = "Error: " + text;
+                        document.getElementById('error-reg').innerText = "Error: " + text;
                     });
                 }
             })
             .catch(error => {
-                document.getElementById('error-message').innerText = "Hubo un problema al registrar el usuario";
+                document.getElementById('error-reg').innerText = "Hubo un problema al registrar el usuario";
             });
     });
 </script>

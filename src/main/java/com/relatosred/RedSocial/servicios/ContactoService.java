@@ -1,6 +1,7 @@
 package com.relatosred.RedSocial.servicios;
 
 import com.relatosred.RedSocial.entidades.*;
+import com.relatosred.RedSocial.repositorios.UsuarioRepository;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,6 +11,7 @@ import com.relatosred.RedSocial.repositorios.ContactoRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -17,141 +19,151 @@ import java.util.stream.Collectors;
 public class ContactoService {
 
     private ContactoRepository contactoRepository;
+    private UsuarioRepository usuarioRepository;
     private UsuarioService usuarioService;
 
     // El constructor inyecta las dependencias.
     public ContactoService(ContactoRepository contactoRepository,
+                           UsuarioRepository usuarioRepository,
                            UsuarioService usuarioService) {
         this.contactoRepository = contactoRepository;
+        this.usuarioRepository = usuarioRepository;
         this.usuarioService = usuarioService;
     }
 
     @Transactional
-    public Contacto agregarContacto(Long idUsuario1, Long idUsuario2) {
-        if (idUsuario1.equals(idUsuario2)) {
-            throw new IllegalArgumentException("No puedes agregarte a ti mismo.");
+    public Contacto seguir(Long idSeguidor, Long idSeguido) {
+        if (idSeguidor.equals(idSeguido)) {
+            throw new IllegalArgumentException("No puedes seguirte a ti mismo.");
         }
 
-        Usuario usuario1 = usuarioService.obtenerUsuarioPorId(idUsuario1);
-        Usuario usuario2 = usuarioService.obtenerUsuarioPorId(idUsuario2);
+        // Verificamos que existan seguidor y seguido.
+        Usuario seguidor = usuarioRepository.findById(idSeguidor)
+                .orElseThrow(() -> new NoSuchElementException("Seguidor no existe."));
+        Usuario seguido = usuarioRepository.findById(idSeguido)
+                .orElseThrow(() -> new NoSuchElementException("Usuario a seguir no existe."));
 
-        // Comprobaciones de estados
-        if (contactoRepository.existsByUsuariosAndEstado(usuario1, usuario2, Contacto.EstadoContacto.PENDIENTE)) {
-            throw new EntityExistsException("La solicitud ya existe.");
-        }
-        if (contactoRepository.existsByUsuariosAndEstado(usuario1, usuario2, Contacto.EstadoContacto.ACEPTADO)) {
-            throw new EntityExistsException("El usuario ya es un contacto.");
-        }
-        if (contactoRepository.existsByUsuariosAndEstado(usuario1, usuario2, Contacto.EstadoContacto.BLOQUEADO)) {
-            throw new EntityExistsException("No se permiten solicitudes de contacto.");
-        }
+        // Verificamos si existe relación.
+        Optional<Contacto> contactoOpt =
+                contactoRepository.findBySeguidorAndSeguido(seguidor, seguido);
 
-        // Reutilización de contacto rechazado.
-        Optional<Contacto> contactoRechazadoOpt =
-                contactoRepository.findByUsuariosAndEstado(usuario1, usuario2, Contacto.EstadoContacto.RECHAZADO);
-
-        if (contactoRechazadoOpt.isPresent()) {
-            Contacto contactoRechazado = contactoRechazadoOpt.get();
-            contactoRechazado.setEstado(Contacto.EstadoContacto.PENDIENTE);
-            contactoRechazado.setFechaContacto(LocalDateTime.now());
-            return contactoRepository.save(contactoRechazado);
-        }
-
-        Contacto contacto = new Contacto();
-        contacto.setUsuario1(usuario1);
-        contacto.setUsuario2(usuario2);
-        contacto.setEstado(Contacto.EstadoContacto.PENDIENTE);
-        contacto.setFechaContacto(LocalDateTime.now());
-        return contactoRepository.save(contacto);
-    }
-
-    // Devuelve contactos de un usuario para un estado.
-    public List<Usuario> listarContactos(Long idUsuario, String estado) {
-        Usuario usuario = usuarioService.obtenerUsuarioPorId(idUsuario);
-        Contacto.EstadoContacto estadoEnum;
-
-        try {
-            estadoEnum = Contacto.EstadoContacto.valueOf(estado.trim().toUpperCase());
-        } catch (IllegalArgumentException | NullPointerException e) {
-            throw new IllegalArgumentException("Estado de contacto no válido.");
-        }
-
-        List<Contacto> contactos = contactoRepository.findByUsuarioAndEstado(usuario, estadoEnum);
-
-        List<Usuario> listaUsuarios = new ArrayList<>();
-        for (Contacto c : contactos) {
-            if (c.getUsuario1().equals(usuario)) {
-                listaUsuarios.add(c.getUsuario2());
+        // Si ya existe, no duplicar.
+        if (contactoOpt.isPresent()) {
+            Contacto contacto = contactoOpt.get();
+            if (contacto.getBloqueado()) {
+                contacto.setBloqueado(false);
+                return contactoRepository.save(contacto);
             } else {
-                listaUsuarios.add(c.getUsuario1());
+                throw new IllegalStateException("Ya sigues a este usuario.");
+            }
+        } else {
+            Contacto nuevoContacto = new Contacto();
+            nuevoContacto.setSeguidor(seguidor);
+            nuevoContacto.setSeguido(seguido);
+            nuevoContacto.setBloqueado(false);
+            nuevoContacto.setFechaContacto(LocalDateTime.now());
+            return contactoRepository.save(nuevoContacto);
+        }
+    }
+
+    @Transactional
+    public void dejarDeSeguir(Long idSeguidor, Long idSeguido) {
+        if (idSeguidor.equals(idSeguido)) {
+            throw new IllegalArgumentException("No puedes dejar de seguirte a ti mismo.");
+        }
+
+        // Verificamos que existan seguidor y seguido.
+        Usuario seguidor = usuarioRepository.findById(idSeguidor)
+                .orElseThrow(() -> new NoSuchElementException("Seguidor no existe."));
+        Usuario seguido = usuarioRepository.findById(idSeguido)
+                .orElseThrow(() -> new NoSuchElementException("Usuario a dejar de seguir no existe."));
+
+        // Obtenemos relación de seguimiento.
+        Optional<Contacto> contactoOpt = contactoRepository.findBySeguidorAndSeguido(seguidor, seguido);
+
+        if (contactoOpt.isPresent()) {
+            // Si existe, eliminamos el contacto.
+            contactoRepository.delete(contactoOpt.get());
+        } else {
+            // Si no existe la relación, lanzamos excepción.
+            throw new IllegalStateException("No sigues a este usuario.");
+        }
+    }
+
+    @Transactional
+    public Contacto bloquearUsuario(Long idBloqueador, Long idBloqueado) {
+        Usuario bloqueador = usuarioRepository.findById(idBloqueador)
+                .orElseThrow(() -> new NoSuchElementException("Usuario bloqueador no encontrado."));
+        Usuario bloqueado = usuarioRepository.findById(idBloqueado)
+                .orElseThrow(() -> new NoSuchElementException("Usuario a bloquear no encontrado"));
+
+        // Si ya existe un bloqueo en esa dirección salimos.
+        if (contactoRepository.existsBySeguidorAndSeguidoAndBloqueado(bloqueador, bloqueado, true)) {
+            return contactoRepository.findBySeguidorAndSeguido(bloqueador, bloqueado).get();
+        }
+
+        Optional<Contacto> existente = contactoRepository.findBySeguidorAndSeguido(bloqueador, bloqueado);
+
+        if (existente.isPresent()) {
+            // Si ya existe, se actualiza como bloqueado.
+            Contacto contacto = existente.get();
+            contacto.setBloqueado(true);
+            return contactoRepository.save(contacto);
+        } else {
+            // Si no existe, se crea una relación unilateral de "bloqueo".
+            Contacto nuevoBloqueo = new Contacto();
+            nuevoBloqueo.setSeguidor(bloqueador);
+            nuevoBloqueo.setSeguido(bloqueado);
+            nuevoBloqueo.setBloqueado(true);
+            nuevoBloqueo.setFechaContacto(LocalDateTime.now());
+            return contactoRepository.save(nuevoBloqueo);
+        }
+    }
+
+    @Transactional
+    public void desbloquearUsuario(Long idBloqueador, Long idBloqueado) {
+        Usuario bloqueador = usuarioRepository.findById(idBloqueador)
+                .orElseThrow(() -> new NoSuchElementException("Usuario bloqueador no encontrado."));
+        Usuario bloqueado = usuarioRepository.findById(idBloqueado)
+                .orElseThrow(() -> new NoSuchElementException("Usuario a desbloquear no encontrado."));
+
+        Optional<Contacto> existenteOpt = contactoRepository.findBySeguidorAndSeguido(bloqueador, bloqueado);
+
+        if (existenteOpt.isPresent()) {
+            Contacto existente = existenteOpt.get();
+            if (existente.getBloqueado()) {
+                contactoRepository.delete(existente);
+            } else {
+                throw new IllegalStateException("El usuario no está bloqueado.");
             }
         }
-        return listaUsuarios;
     }
 
-    @Transactional
-    public void aceptarContacto(Long idUsuario1, Long idUsuario2) {
-        Usuario usuario1 = usuarioService.obtenerUsuarioPorId(idUsuario1);
-        Usuario usuario2 = usuarioService.obtenerUsuarioPorId(idUsuario2);
+    // Listar usuarios seguidos.
+    @Transactional(readOnly = true)
+    public List<Usuario> listarSeguidos(Long idSeguidor) {
+        Usuario seguidor = usuarioRepository.findById(idSeguidor)
+                .orElseThrow(() -> new NoSuchElementException("Seguidor no existe."));
 
-        // Buscamos una relación PENDIENTE entre ambos (en cualquier dirección)
-        Optional<Contacto> contactoOpt = contactoRepository.findByUsuariosAndEstado(
-                usuario1, usuario2, Contacto.EstadoContacto.PENDIENTE);
-
-        if (!contactoOpt.isPresent()) {
-            throw new EntityNotFoundException("No existe solicitud pendiente de contacto.");
-        }
-
-        Contacto contacto = contactoOpt.get();
-        contacto.setEstado(Contacto.EstadoContacto.ACEPTADO);
-        contacto.setFechaContacto(LocalDateTime.now());
-        contactoRepository.save(contacto);
-    }
-
-    @Transactional
-    public void eliminarContacto(Long idUsuario1, Long idUsuario2) {
-        Usuario usuario1 = usuarioService.obtenerUsuarioPorId(idUsuario1);
-        Usuario usuario2 = usuarioService.obtenerUsuarioPorId(idUsuario2);
-
-        List<Contacto> contactos = contactoRepository.findByUsuarios(usuario1, usuario2);
-
+        List<Contacto> contactos = contactoRepository.findBySeguidorAndBloqueadoFalse(seguidor);
+        List<Usuario> seguidos  = new ArrayList<>();
         for (Contacto c : contactos) {
-            if (c.getEstado() != Contacto.EstadoContacto.BLOQUEADO &&
-                    c.getEstado() != Contacto.EstadoContacto.RECHAZADO) {
-                c.setEstado(Contacto.EstadoContacto.RECHAZADO);
-                contactoRepository.save(c);
-            }
+            seguidos.add(c.getSeguido());
         }
+        return seguidos;
     }
 
-    @Transactional
-    public Usuario bloquearContacto(Long idUsuario1, Long idUsuario2) {
-        Usuario usuario1 = usuarioService.obtenerUsuarioPorId(idUsuario1);
-        Usuario usuario2 = usuarioService.obtenerUsuarioPorId(idUsuario2);
+    // Listar usuarios que nos siguen.
+    @Transactional(readOnly = true)
+    public List<Usuario> listarSeguidores(Long idSeguido) {
+        Usuario seguido = usuarioRepository.findById(idSeguido)
+                .orElseThrow(() -> new NoSuchElementException("Usuario no existe."));
 
-        List<Contacto> contactos = contactoRepository.findByUsuarios(usuario1, usuario2);
-
+        List<Contacto> contactos = contactoRepository.findBySeguidoAndBloqueadoFalse(seguido);
+        List<Usuario> seguidores = new ArrayList<>();
         for (Contacto c : contactos) {
-            if (c.getEstado() != Contacto.EstadoContacto.BLOQUEADO &&
-                    c.getEstado() != Contacto.EstadoContacto.RECHAZADO) {
-                c.setEstado(Contacto.EstadoContacto.RECHAZADO);
-                contactoRepository.save(c);
-            }
-            if (c.getUsuario1().equals(usuario1)) {
-                c.setEstado(Contacto.EstadoContacto.BLOQUEADO);
-                contactoRepository.save(c);
-            }
+            seguidores.add(c.getSeguidor());
         }
-
-        // Si no existe la relación en sentido correcto se crea.
-        if (!contactoRepository.existsByUsuario1AndUsuario2(usuario1, usuario2)) {
-            Contacto contacto = new Contacto();
-            contacto.setUsuario1(usuario1);
-            contacto.setUsuario2(usuario2);
-            contacto.setEstado(Contacto.EstadoContacto.BLOQUEADO);
-            contacto.setFechaContacto(LocalDateTime.now());
-            contactoRepository.save(contacto);
-        }
-        return usuario2;
+        return seguidores;
     }
 }

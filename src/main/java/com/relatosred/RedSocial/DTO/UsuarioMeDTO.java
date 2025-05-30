@@ -15,6 +15,7 @@ public class UsuarioMeDTO {
     private String apellido;
     private String alias;
     private String email;
+    private String sexo;
     private LocalDate fechaNac;
     private String avatarURL;
     private String rol;
@@ -26,6 +27,7 @@ public class UsuarioMeDTO {
         this.apellido = usuario.getApellido();
         this.alias = usuario.getAlias();
         this.email = usuario.getEmail();
+        this.sexo = usuario.getSexo();
         this.fechaNac = usuario.getFechaNac();
         this.avatarURL = usuario.getAvatarURL();
         this.rol = usuario.getRol().name();
@@ -51,6 +53,10 @@ public class UsuarioMeDTO {
     // Email del usuario actual.
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    // Sexo del usuario actual.
+    public String getSexo() { return sexo; }
+    public void setSexo(String sexo) { this.sexo = sexo; }
 
     // Fecha de nacimiento del usuario actual.
     public LocalDate getFechaNac() { return fechaNac; }

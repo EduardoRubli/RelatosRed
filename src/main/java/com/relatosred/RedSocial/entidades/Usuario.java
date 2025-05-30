@@ -68,13 +68,13 @@ public class Usuario {
     @OneToMany(mappedBy = "usuario", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private Set<Imagen> imagenes = new HashSet<>();
 
-    @JsonIgnore // Solicitudes de contacto enviadas.
-    @OneToMany(mappedBy = "usuario1", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private Set<Contacto> contactosEnviados = new HashSet<>();
+    @JsonIgnore // Lista de contactos seguidos.
+    @OneToMany(mappedBy = "seguidor", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private Set<Contacto> seguidos = new HashSet<>();
 
     @JsonIgnore // Solicitudes de contacto recibidas.
-    @OneToMany(mappedBy = "usuario2", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    private Set<Contacto> contactosRecibidos = new HashSet<>();
+    @OneToMany(mappedBy = "seguido", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    private Set<Contacto> seguidores = new HashSet<>();
 
     // Favoritos.
     @JsonIgnore
@@ -254,21 +254,19 @@ public class Usuario {
         this.imagenes = imagenes;
     }
 
-    public Set<Contacto> getContactosEnviados() {
-        return contactosEnviados;
+    // Obtener set de contactos seguidos.
+    public Set<Contacto> getSeguidos() { return seguidos; }
+
+    public void setSeguidos(Set<Contacto> seguidos) {
+        this.seguidos = seguidos;
     }
 
-    public void setContactosEnviados(Set<Contacto> contactosEnviados) {
-        this.contactosEnviados = contactosEnviados;
+    // Obtener set de contactos seguidores.
+    public Set<Contacto> getSeguidores() {
+        return seguidores;
     }
 
-    public Set<Contacto> getContactosRecibidos() {
-        return contactosRecibidos;
-    }
-
-    public void setContactosRecibidos(Set<Contacto> contactosRecibidos) {
-        this.contactosRecibidos = contactosRecibidos;
-    }
+    public void setSeguidores(Set<Contacto> seguidores) { this.seguidores = seguidores; }
 
     public Set<Usuario> getFavoritos() {
         return favoritos;
