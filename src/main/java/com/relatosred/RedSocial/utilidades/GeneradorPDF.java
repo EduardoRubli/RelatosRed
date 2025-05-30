@@ -1,81 +1,154 @@
 package com.relatosred.RedSocial.utilidades;
 
-import com.itextpdf.kernel.colors.ColorConstants;
-import com.itextpdf.kernel.colors.DeviceGray;
-import com.itextpdf.kernel.events.PdfDocumentEvent;
-import com.itextpdf.kernel.font.PdfFontFactory;
-import com.itextpdf.kernel.geom.Rectangle;
-import com.itextpdf.kernel.pdf.*;
-import com.itextpdf.kernel.pdf.canvas.PdfCanvas;
-import com.itextpdf.kernel.pdf.canvas.draw.SolidLine;
-import com.itextpdf.layout.Canvas;
-import com.itextpdf.layout.*;
-import com.itextpdf.layout.element.*;
-import com.itextpdf.layout.properties.*;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDPage;
+import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDType1Font;
+
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 public class GeneradorPDF {
 
-    public static byte[] crearDesdeTexto(String titulo, String autor,
-                                         LocalDate fecha, String contenido) throws Exception {
+    private static java.util.List<String> dividirLinea(String linea, PDType1Font font, float fontSize, float maxWidth) throws IOException {
+        java.util.List<String> resultado = new java.util.ArrayList<>();
+        String[] palabras = linea.split(" ");
+        StringBuilder actual = new StringBuilder();
+        for (String palabra : palabras) {
+            String prueba = actual.length() == 0 ? palabra : actual + " " + palabra;
+            float ancho = font.getStringWidth(prueba) / 1000 * fontSize;
+            if (ancho > maxWidth) {
+                if (actual.length() > 0) {
+                    resultado.add(actual.toString());
+                    actual = new StringBuilder(palabra);
+                } else {
+                    resultado.add(palabra); // palabra sola es demasiado larga
+                    actual = new StringBuilder();
+                }
+            } else {
+                if (actual.length() > 0) actual.append(" ");
+                actual.append(palabra);
+            }
+        }
+        if (actual.length() > 0) resultado.add(actual.toString());
+        return resultado;
+    }
 
+    public static byte[] crearDesdeTexto(
+            String titulo,
+            String autor,
+            LocalDate fecha,
+            String contenido
+    ) throws IOException {
+        // Crear documento y streams
+        PDDocument document = new PDDocument();
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        PdfWriter writer = new PdfWriter(baos);
-        PdfDocument pdf = new PdfDocument(writer);
-        pdf.addEventHandler(PdfDocumentEvent.END_PAGE, new PieHandler());
-        Document doc = new Document(pdf);
 
-        doc.setFont(PdfFontFactory.createFont());
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", new Locale("es", "ES"));
+        // Formatter de fecha en español
+        DateTimeFormatter formatter =
+                DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", new Locale("es", "ES"));
         String fechaStr = fecha.format(formatter);
 
-        // Título grande.
-        Paragraph tituloParrafo = new Paragraph(titulo)
-                .setFontSize(36)
-                .setBold()
-                .setTextAlignment(TextAlignment.CENTER)
-                .setMarginTop(150)
-                .setMarginBottom(20);
-        doc.add(tituloParrafo);
+        // ======= Portada =======
+        PDPage portada = new PDPage(PDRectangle.LETTER);
+        document.addPage(portada);
 
-        // Línea separadora.
-        LineSeparator separator = new LineSeparator(new SolidLine())
-                .setStrokeColor(new DeviceGray(0.7f))
-                .setMinWidth(1)
-                .setWidth(UnitValue.createPercentValue(50))
-                .setMarginBottom(20);
-        doc.add(new Paragraph().add(separator).setTextAlignment(TextAlignment.CENTER));
+        try (PDPageContentStream cs = new PDPageContentStream(document, portada)) {
+            float pageWidth = portada.getMediaBox().getWidth();
+            float y = portada.getMediaBox().getHeight() - 150;
 
-        // Autor.
-        Paragraph autorParrafo = new Paragraph("Autor: " + autor)
-                .setFontSize(18)
-                .setBold()
-                .setTextAlignment(TextAlignment.CENTER)
-                .setMarginBottom(10);
-        doc.add(autorParrafo);
+            // Título grande
+            cs.beginText();
+            cs.setFont(PDType1Font.HELVETICA_BOLD, 36);
+            float titleWidth = PDType1Font.HELVETICA_BOLD.getStringWidth(titulo) / 1000 * 36;
+            cs.newLineAtOffset((pageWidth - titleWidth) / 2, y);
+            cs.showText(titulo);
+            cs.endText();
 
-        // Fecha en cursiva.
-        Paragraph fechaParrafo = new Paragraph(fechaStr)
-                .setFontSize(12)
-                .setItalic()
-                .setTextAlignment(TextAlignment.CENTER)
-                .setMarginBottom(100);
-        doc.add(fechaParrafo);
+            // Línea separadora
+            y -= 50;
+            float lineWidth = pageWidth * 0.5f;
+            float xStart = (pageWidth - lineWidth) / 2;
+            cs.setStrokingColor(128);
+            cs.setLineWidth(1);
+            cs.moveTo(xStart, y);
+            cs.lineTo(xStart + lineWidth, y);
+            cs.stroke();
 
-        // Salto de página a contenido.
-        doc.add(new AreaBreak(AreaBreakType.NEXT_PAGE));
+            // Autor
+            y -= 30;
+            String autorText = "Autor: " + autor;
+            cs.beginText();
+            cs.setFont(PDType1Font.HELVETICA_BOLD, 18);
+            float autorWidth = PDType1Font.HELVETICA_BOLD.getStringWidth(autorText) / 1000 * 18;
+            cs.newLineAtOffset((pageWidth - autorWidth) / 2, y);
+            cs.showText(autorText);
+            cs.endText();
 
-        // Contenido del relato.
-        for (String linea : contenido.split("\n")) {
-            doc.add(new Paragraph(linea)
-                    .setFontSize(12)
-                    .setMarginBottom(4));
+            // Fecha
+            y -= 20;
+            cs.beginText();
+            cs.setFont(PDType1Font.HELVETICA_OBLIQUE, 12);
+            float fechaWidth = PDType1Font.HELVETICA_OBLIQUE.getStringWidth(fechaStr) / 1000 * 12;
+            cs.newLineAtOffset((pageWidth - fechaWidth) / 2, y);
+            cs.showText(fechaStr);
+            cs.endText();
         }
 
-        doc.close();
+        // ======= Contenido =======
+        PDPage pagina = new PDPage(PDRectangle.LETTER);
+        document.addPage(pagina);
+        final float margin = 50;
+        final float leading = 14;
+        final float startY = pagina.getMediaBox().getHeight() - margin;
+        float cursorY = startY;
+
+        PDType1Font font = PDType1Font.HELVETICA;
+        float fontSize = 12f;
+        final float width = pagina.getMediaBox().getWidth() - 2 * margin;
+
+        PDPageContentStream cs = new PDPageContentStream(document, pagina);
+        cs.beginText();
+        cs.setFont(font, fontSize);
+        cs.newLineAtOffset(margin, cursorY);
+
+        for (String linea : contenido.split("\\r?\\n")) {
+            if (linea.trim().isEmpty()) {
+                // Línea vacía → salto doble.
+                cursorY -= leading;
+                cs.newLineAtOffset(0, -leading);
+                continue;
+            }
+
+            java.util.List<String> subLineas = dividirLinea(linea, font, fontSize, width);
+            for (String subLinea : subLineas) {
+                if (cursorY - leading < margin) {
+                    cs.endText();
+                    cs.close();
+
+                    pagina = new PDPage(PDRectangle.LETTER);
+                    document.addPage(pagina);
+                    cs = new PDPageContentStream(document, pagina);
+                    cursorY = startY;
+                    cs.beginText();
+                    cs.setFont(font, fontSize);
+                    cs.newLineAtOffset(margin, cursorY);
+                }
+                cs.showText(subLinea);
+                cs.newLineAtOffset(0, -leading);
+                cursorY -= leading;
+            }
+        }
+        cs.endText();
+        cs.close();
+
+        // Guardar y cerrar
+        document.save(baos);
+        document.close();
         return baos.toByteArray();
     }
 }

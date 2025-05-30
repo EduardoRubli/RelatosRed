@@ -269,11 +269,13 @@
   async function guardarTexto(idTexto) {
     try {
       // Comprueba que el PDF está disponible
-      const head = await fetch(`/texto/${idTexto}/pdf`, {
-        method: 'HEAD',
+      const response = await fetch(`/texto/${idTexto}/pdf`, {
+        method: 'GET',
         credentials: 'include'
       });
-      if (!head.ok) throw new Error(`Código ${head.status}`);
+      if (!response.ok) {
+        throw new Error(`Código ${response.status}`);
+      }
 
       // Lanza la descarga en nueva pestaña
       window.open(`/texto/${idTexto}/pdf`, '_blank');
