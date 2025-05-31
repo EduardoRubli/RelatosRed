@@ -1,5 +1,8 @@
 # Etapa 1: construcción con Maven usando Eclipse Temurin JDK 21 (alpine)
-FROM eclipse-temurin:21-jdk-alpine AS build
+FROM maven:3.9.6-eclipse-temurin-21 AS build
+
+# Instalar Maven
+RUN apt-get update && apt-get install -y maven
 
 # Instalar herramientas necesarias para Maven Wrapper (tar, gzip)
 RUN apk add --no-cache tar gzip
@@ -18,7 +21,7 @@ RUN ./mvnw dependency:go-offline -B
 COPY src ./src
 
 # Construir el proyecto empaquetando el JAR (se omiten tests para acelerar)
-RUN ./mvnw clean package -DskipTests -B
+RUN mvn clean package -DskipTests -B
 
 # Etapa 2: imagen de ejecución ligera con JDK 21 (alpine)
 FROM eclipse-temurin:21-jdk-alpine
