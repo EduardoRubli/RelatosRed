@@ -1,5 +1,5 @@
-# Construcción con Maven usando Eclipse Temurin JDK 21.
-FROM maven:3.9.6-eclipse-temurin-21 AS build
+# Construcción con Maven usando Eclipse Temurin JDK 17.
+FROM maven:3.9.6-eclipse-temurin-17 AS build
 
 # Crear directorio de trabajo.
 WORKDIR /app
@@ -18,8 +18,8 @@ COPY src ./src
 # Construir el proyecto.
 RUN ./mvnw clean package -DskipTests -B
 
-# Imagen de ejecución ligera con JDK 21.
-FROM eclipse-temurin:21-jre-alpine
+# Imagen de ejecución ligera con JDK 17.
+FROM eclipse-temurin:17-jre-alpine
 
 # Directorio de trabajo
 WORKDIR /app
