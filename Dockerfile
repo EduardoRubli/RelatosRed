@@ -1,44 +1,34 @@
-# Etapa 1: construcción con Maven usando Eclipse Temurin JDK 21 (alpine)
+# Construcción con Maven usando Eclipse Temurin JDK 21.
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 
-# Instalar Maven
-RUN apt-get update && apt-get install -y maven
-
-# Instalar herramientas necesarias para Maven Wrapper (tar, gzip)
-RUN apk add --no-cache tar gzip
-
-# Crear directorio de trabajo
+# Crear directorio de trabajo.
 WORKDIR /app
 
-# Copiar los archivos del Maven Wrapper y pom.xml para descargar dependencias
-COPY .mvn/ .mvn
-COPY mvnw pom.xml ./
+# Copia solo los archivos necesarios para descargar dependencias.
+COPY pom.xml ./
+COPY .mvn .mvn
+COPY mvnw .
 
-# Descargar dependencias sin compilar (capa cacheable)
+# Descargar dependencias (capa cacheable)
 RUN ./mvnw dependency:go-offline -B
 
 # Copiar el resto del código fuente
 COPY src ./src
 
-# Construir el proyecto empaquetando el JAR (se omiten tests para acelerar)
-RUN mvn clean package -DskipTests -B
+# Construir el proyecto.
+RUN ./mvnw clean package -DskipTests -B
 
-# Etapa 2: imagen de ejecución ligera con JDK 21 (alpine)
-FROM eclipse-temurin:21-jdk-alpine
+# Imagen de ejecución ligera con JDK 21.
+FROM eclipse-temurin:21-jre-alpine
 
-# Directorio de trabajo en el contenedor de ejecución
+# Directorio de trabajo
 WORKDIR /app
 
-# Copiar el JAR resultante desde la etapa de construcción
+# Copiar el JAR
 COPY --from=build /app/target/*.jar ./app.jar
 
-# (Opcional) Exponer el puerto de la app; Spring Boot usa 8080 por defecto.
+# Exponer puerto
 EXPOSE 8080
 
-# Usar variables de entorno de Railway en tiempo de ejecución. Por ejemplo:
-#   - La aplicación lee server.port desde ${PORT} (configuración en application.properties).
-#   - Las variables MYSQLHOST, MYSQLPORT, MYSQLUSER, MYSQLPASSWORD, MYSQLDATABASE se usan en conexión JDBC.
-# El Dockerfile no fija estas variables; Railway las inyectará al correr el contenedor.
-#
-# Comando por defecto: ejecutar el JAR empaquetado
+# Usar variables de entorno de Railway
 ENTRYPOINT ["java", "-jar", "app.jar"]
