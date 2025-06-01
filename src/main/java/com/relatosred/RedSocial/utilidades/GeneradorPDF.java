@@ -46,12 +46,12 @@ public class GeneradorPDF {
         // Color gris para pie de página.
         cs.setNonStrokingColor(0.5f, 0.5f, 0.5f);
         cs.setFont(PDType1Font.HELVETICA, fontSize);
-        float anchoTexto = PDType1Font.HELVETICA.getStringWidth("www.relatosfera.com") / 1000 * fontSize;
+        float anchoTexto = PDType1Font.HELVETICA.getStringWidth("Descargado de relatosfera.com") / 1000 * fontSize;
         float x = (pagina.getMediaBox().getWidth() - anchoTexto) / 2;
 
         cs.beginText();
         cs.newLineAtOffset(x, yPie);
-        cs.showText("www.relatosfera.com");
+        cs.showText("Descargado de relatosfera.com");
         cs.endText();
     }
 
