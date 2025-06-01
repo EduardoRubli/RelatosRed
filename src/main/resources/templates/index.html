@@ -258,8 +258,8 @@
             .then(mensajeCreado => {
               // Limpia el input
               document.getElementById('inputComentario').value = '';
-              // Opcional: recarga los comentarios
-              cargarComentarios(idTexto);
+              // Recarga los comentarios después de un segundo.
+              setTimeout(() => cargarComentarios(idTexto), 1000);
               alert('Comentario publicado.');
             })
             .catch(error => {
