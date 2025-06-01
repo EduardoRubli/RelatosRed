@@ -18,13 +18,16 @@ COPY . .
 RUN ./mvnw clean package -DskipTests -B \
     -Dmaven.javadoc.skip=true \
     -Dmaven.source.skip=true
+    
+# Renombrar el JAR.
+RUN mv target/*.jar app.jar    
 
 # Etapa de producción.
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 # Copiar el JAR minimizado.
-COPY --from=build /app/target/*-SNAPSHOT.jar ./app.jar
+COPY --from=build /app/app.jar ./app.jar
 
 # Configurar JVM para producción.
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -XX:+IdleTuningCompactOnIdle -XX:+IdleTuningGcOnIdle"
