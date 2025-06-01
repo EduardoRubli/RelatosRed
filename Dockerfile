@@ -6,16 +6,16 @@ WORKDIR /app
 COPY pom.xml .
 COPY .mvn/ .mvn
 COPY mvnw .
+RUN chmod +x mvnw
 
 # Descargar dependencias (capa cacheable).
 RUN ./mvnw dependency:go-offline -B
 
 # Copiar el código fuente.
-COPY src ./src
+COPY . .
 
 # Construir el proyecto optimizando para producción.
 RUN ./mvnw clean package -DskipTests -B \
-    -Dspring-boot.repackage.skip=true \
     -Dmaven.javadoc.skip=true \
     -Dmaven.source.skip=true
 
@@ -24,7 +24,7 @@ FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
 # Copiar el JAR minimizado.
-COPY --from=build /app/target/*.jar ./app.jar
+COPY --from=build /app/target/*-SNAPSHOT.jar ./app.jar
 
 # Configurar JVM para producción.
 ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -XX:+IdleTuningCompactOnIdle -XX:+IdleTuningGcOnIdle"
@@ -33,4 +33,4 @@ ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75 -XX:+IdleTuningC
 EXPOSE 8080
 
 # Usar variables de entorno.
-CMD ["sh", "-c", "java ${JAVA_OPTS} -jar app.jar"]
+CMD java $JAVA_OPTS -jar app.jar
