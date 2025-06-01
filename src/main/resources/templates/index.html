@@ -94,7 +94,7 @@
       headerLogin.innerHTML = `
       <span class="bienvenida">${saludo}, ${capitalizar(usuarioActual.alias)}</span>
       <div class="login-links">
-        <b><a href="#" class="link-registro">Condiciones</a>
+        <b><a href="#" class="link-registro" onClick="cargarPerfilUsuario(usuarioActual.idUsuario)">Mi Perfil</a>
         <a href="/index" class="link-registro">Inicio</a>
         <a href="/logout" class="link-registro" style="color: #f16161">Logout</a></b>
       </div>`;
@@ -199,6 +199,9 @@
       mostrarError(error.message);
       return;
     }
+    
+    // Restauramos el display del contenedor.
+    document.getElementById('filtrosContainer').style.display = '';
 
     fetch(`/texto/${idTexto}`)
             .then(response => {

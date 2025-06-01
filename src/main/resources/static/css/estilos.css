@@ -250,10 +250,8 @@ body {
     align-items: center;
     justify-content: flex-start;
     gap: 12px;
-    background: #fff;
-    padding: 1em 1.2em;
+    padding: 0em 1.2em;
     border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     flex: 0 1 auto;
     max-width: 480px;
     min-width: 260px;
