@@ -1,10 +1,12 @@
 body {
     font-family: Arial, sans-serif;
     margin: 0; padding: 0;
+    min-width: 360px;
     background: #f7f7fa;
 }
 .contenedor-principal {
     max-width: 1080px;
+    min-width: 360px;
     margin: 0 auto;
     width: 100%;
     padding: 0;
@@ -133,6 +135,8 @@ body {
 .puntuacion-wrapper {
     display: flex;
     align-items: center;
+    justify-content: flex-end;
+    margin-left: auto;
     gap: 15px;
 }
 .puntuacion-form {
@@ -189,6 +193,12 @@ body {
 .detalle-relato-nota-container {
     margin-left: auto;
     margin-right: 15px;
+}
+.titulo-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex: 1;
 }
 .detalle-relato-nota {
     display: inline-block;
@@ -1219,11 +1229,15 @@ footer {
     .detalle-relato-titulo {
         font-size: 1.2rem;
     }
+    .titulo-wrapper {
+        width: 100%;
+        justify-content: flex-start;
+    }
     .btn-volver {
         font-size: 0.8em;
     }
     .detalle-relato-nota {
-        font-size: 0.8em;
+        display: none;
     }
     .nav-usuario-boton {
         font-size: 0.9em;

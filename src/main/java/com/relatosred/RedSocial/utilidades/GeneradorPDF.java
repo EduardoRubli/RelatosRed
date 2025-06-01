@@ -13,7 +13,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 public class GeneradorPDF {
-
     private static java.util.List<String> dividirLinea(String linea, PDType1Font font, float fontSize, float maxWidth) throws IOException {
         java.util.List<String> resultado = new java.util.ArrayList<>();
         String[] palabras = linea.split(" ");
@@ -36,6 +35,24 @@ public class GeneradorPDF {
         }
         if (actual.length() > 0) resultado.add(actual.toString());
         return resultado;
+    }
+
+    private static void dibujarPie(PDPageContentStream cs, PDPage pagina)
+            throws IOException {
+        final float margin = 50;
+        final float fontSize = 12f;
+        final float yPie = margin -8; // Un poco arriba del margen inferior
+
+        // Color gris para pie de página.
+        cs.setNonStrokingColor(0.5f, 0.5f, 0.5f);
+        cs.setFont(PDType1Font.HELVETICA, fontSize);
+        float anchoTexto = PDType1Font.HELVETICA.getStringWidth("www.relatosfera.com") / 1000 * fontSize;
+        float x = (pagina.getMediaBox().getWidth() - anchoTexto) / 2;
+
+        cs.beginText();
+        cs.newLineAtOffset(x, yPie);
+        cs.showText("www.relatosfera.com");
+        cs.endText();
     }
 
     public static byte[] crearDesdeTexto(
@@ -116,6 +133,8 @@ public class GeneradorPDF {
         cs.setFont(font, fontSize);
         cs.newLineAtOffset(margin, cursorY);
 
+        boolean cambioPagina = false;
+
         for (String linea : contenido.split("\\r?\\n")) {
             if (linea.trim().isEmpty()) {
                 // Línea vacía → salto doble.
@@ -126,8 +145,11 @@ public class GeneradorPDF {
 
             java.util.List<String> subLineas = dividirLinea(linea, font, fontSize, width);
             for (String subLinea : subLineas) {
-                if (cursorY - leading < margin) {
+                final float espacioExtraPie = 25f;
+                if (cursorY - leading < margin + espacioExtraPie) {
                     cs.endText();
+
+                    dibujarPie(cs, pagina);
                     cs.close();
 
                     pagina = new PDPage(PDRectangle.LETTER);
@@ -137,6 +159,8 @@ public class GeneradorPDF {
                     cs.beginText();
                     cs.setFont(font, fontSize);
                     cs.newLineAtOffset(margin, cursorY);
+                    // Control de cambio de página.
+                    cambioPagina = true;
                 }
                 cs.showText(subLinea);
                 cs.newLineAtOffset(0, -leading);
@@ -144,6 +168,9 @@ public class GeneradorPDF {
             }
         }
         cs.endText();
+        if (cambioPagina) {
+            dibujarPie(cs, pagina);
+        }
         cs.close();
 
         // Guardar y cerrar
