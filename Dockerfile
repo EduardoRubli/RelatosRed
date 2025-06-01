@@ -2,11 +2,22 @@
 FROM eclipse-temurin:17-jdk AS build
 WORKDIR /app
 
+# Copiar solo lo necesario para caché.
+COPY pom.xml .
+COPY .mvn/ .mvn
+COPY mvnw .
+RUN chmod +x mvnw
+
+# Descargar dependencias sin compilar.
+RUN ./mvnw dependency:go-offline -B
+
 # Copiar el proyecto completo
 COPY . .
 
 # Construir la app (sin tests para acelerar)
-RUN ./mvnw clean package -DskipTests
+RUN ./mvnw clean package -DskipTests -B \
+    -Dmaven.javadoc.skip=true \
+    -Dmaven.source.skip=true
 
 # Etapa de ejecución
 FROM eclipse-temurin:17-jre
